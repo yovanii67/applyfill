@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>ApplyFill profile</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="face" aria-hidden="true">
+          <span class="antenna"></span>
+          <span class="eye left"></span>
+          <span class="eye right"></span>
+          <span class="mouth"></span>
+        </div>
+        <div>
+          <p class="kicker">Your reusable answers</p>
+          <h1>Application profile</h1>
+          <p class="lede">Answers stay on this computer only. Fill in your own details — never copy someone else’s profile. ApplyFill never submits the application for you.</p>
+        </div>
+      </header>
+
+      <form id="profile"></form>
+
+      <section class="settings">
+        <h2>Behavior</h2>
+        <label class="check"><input id="skipFilled" type="checkbox" checked /> Skip fields that already have text</label>
+        <label class="check"><input id="showFab" type="checkbox" checked /> Show the bot face on application pages</label>
+        <label class="check"><input id="autoFillAts" type="checkbox" /> Auto-fill known job sites (Greenhouse, Lever, Workday, Handshake…)</label>
+      </section>
+
+      <div class="actions">
+        <button id="save" type="button">Save profile</button>
+        <p id="toast" hidden>Saved.</p>
+      </div>
+    </main>
+    <script src="profile.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>

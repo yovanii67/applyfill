@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tesla Easy Apply — practice</title>
+    <style>
+      body { margin: 0; background: #fff; color: #171a20; font: 15px/1.45 "Segoe UI", sans-serif; }
+      header { padding: 28px 8vw 8px; border-bottom: 1px solid #eee; }
+      header p { margin: 0; color: #5c5e62; font-size: 13px; }
+      main { max-width: 720px; margin: 0 auto; padding: 24px 20px 80px; }
+      h1 { font-size: 28px; margin: 8px 0 4px; }
+      h2 { font-size: 22px; margin: 28px 0 14px; }
+      .toolbar { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 18px; }
+      button.fill { background: #3e6ae1; color: #fff; border: 0; border-radius: 4px; padding: 12px 18px; font-weight: 700; cursor: pointer; }
+      .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      label.q { display: flex; flex-direction: column; gap: 8px; margin: 0 0 18px; font-size: 14px; }
+      input, select { padding: 12px; border: 1px solid #d0d1d2; border-radius: 4px; background: #f4f4f4; font: inherit; }
+      .radios { display: flex; gap: 28px; }
+      .radios label, .radios [role='radio'] { display: flex; flex-direction: row; align-items: center; gap: 8px; font-weight: 400; }
+      .radios [role='radio'] {
+        border: 0; background: transparent; cursor: pointer; font: inherit; padding: 0;
+      }
+      .radios [role='radio']::before {
+        content: ""; width: 16px; height: 16px; border: 2px solid #171a20; border-radius: 50%;
+      }
+      .radios [role='radio'][aria-checked='true']::before {
+        box-shadow: inset 0 0 0 4px #3e6ae1; border-color: #3e6ae1;
+      }
+      .dropdown {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 12px; border: 1px solid #d0d1d2; border-radius: 4px; background: #f4f4f4;
+        font: inherit; width: 100%; text-align: left; cursor: pointer;
+      }
+      .menu {
+        list-style: none; margin: 4px 0 0; padding: 6px 0; border: 1px solid #d0d1d2;
+        background: #fff; border-radius: 4px; box-shadow: 0 8px 24px rgba(0,0,0,.12);
+      }
+      .menu li { padding: 10px 12px; cursor: pointer; }
+      .menu li:hover { background: #f2f2f2; }
+      .check-row { display: flex; align-items: flex-start; gap: 10px; margin: 0 0 18px; cursor: pointer; font-size: 14px; }
+      .box {
+        flex: 0 0 16px; width: 16px; height: 16px; margin-top: 2px;
+        border: 2px solid #171a20; border-radius: 2px; background: #fff;
+      }
+      .box[aria-checked='true'] { background: #3e6ae1; border-color: #3e6ae1; box-shadow: inset 0 0 0 2px #fff; }
+      .date-wrap { display: flex; gap: 8px; }
+      .date-wrap input { flex: 1; }
+      .cal-open { border: 1px solid #d0d1d2; background: #f4f4f4; border-radius: 4px; padding: 0 12px; cursor: pointer; }
+      .calendar {
+        margin-top: 8px; padding: 12px; border: 1px solid #d0d1d2; border-radius: 8px; background: #fff;
+        width: 280px; box-shadow: 0 8px 24px rgba(0,0,0,.12);
+      }
+      .cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: 700; }
+      .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+      .cal-grid button { border: 0; background: #f4f4f4; padding: 8px 0; cursor: pointer; border-radius: 4px; }
+      .cal-grid button:hover { background: #3e6ae1; color: #fff; }
+      [data-applyfill] { outline: 2px solid #2ee6a6; outline-offset: 2px; }
+      .hud { margin-top: 20px; background: #10181d; color: #e8f4ee; border-radius: 12px; padding: 14px; display: none; }
+      .hud.show { display: block; }
+      .hud h3 { margin: 0 0 8px; color: #2ee6a6; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+      .hud div { display: grid; grid-template-columns: 140px 1.2fr 1fr; gap: 8px; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #1e2a30; }
+      @media (max-width: 700px) { .row { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <header>
+      <p>Step 1–4 · practice copy of Tesla Easy Apply</p>
+      <h1>Internship, Industrial Engineer, Manufacturing</h1>
+    </header>
+    <main>
+      <div class="toolbar">
+        <p>Same questions as Tesla’s intern application. Fill your Tesla section in the profile, then click the button.</p>
+        <button class="fill" id="fill" type="button">Fill Tesla blanks</button>
+      </div>
+
+      <form id="app">
+        <h2>Personal Information</h2>
+        <div class="row">
+          <label class="q">Legal First Name <input name="legal_first_name" autocomplete="given-name" /></label>
+          <label class="q">Legal Last Name <input name="legal_last_name" autocomplete="family-name" /></label>
+        </div>
+        <div class="row">
+          <label class="q">Middle Name (Optional) <input name="middle_name" /></label>
+          <label class="q">Preferred Name (Optional) <input name="preferred_name" /></label>
+        </div>
+        <label class="q">Phone Number <input type="tel" name="phone" autocomplete="tel" /></label>
+        <label class="q">Contact Phone Type
+          <button type="button" class="dropdown" role="combobox" aria-haspopup="listbox" aria-expanded="false"><span class="value">Select</span> ▾</button>
+          <ul class="menu" role="listbox" hidden>
+            <li role="option">Mobile</li>
+            <li role="option">Home</li>
+            <li role="option">Work</li>
+          </ul>
+        </label>
+        <div class="row">
+          <div>
+            <label class="q">Email</label>
+            <input name="email" />
+          </div>
+          <label class="q">Country/Region of Residence
+            <button type="button" class="dropdown" role="combobox" aria-haspopup="listbox" aria-expanded="false"><span class="value">Select</span> ▾</button>
+            <ul class="menu" role="listbox" hidden>
+              <li role="option">United States</li>
+              <li role="option">Mexico</li>
+              <li role="option">Canada</li>
+            </ul>
+          </label>
+        </div>
+
+        <h2>Work Experience</h2>
+        <label class="q">How many months are you available for an internship? Internships must be at least three months long.
+          <button type="button" class="dropdown" role="combobox" aria-haspopup="listbox" aria-expanded="false"><span class="value">Select</span> ▾</button>
+          <ul class="menu" role="listbox" hidden>
+            <li role="option">3 months</li>
+            <li role="option">4 months</li>
+            <li role="option">5 months</li>
+            <li role="option">6 months</li>
+            <li role="option">7 months or more</li>
+          </ul>
+        </label>
+        <label class="q">Are you available for a full-time Internship? Only full-time positions are offered.
+          <button type="button" class="dropdown" role="combobox" aria-haspopup="listbox" aria-expanded="false"><span class="value">Select</span> ▾</button>
+          <ul class="menu" role="listbox" hidden>
+            <li role="option">Yes</li>
+            <li role="option">No</li>
+          </ul>
+        </label>
+        <fieldset>
+          <legend>Do you need to write a thesis or report for your university as part of your Internship?</legend>
+          <div class="radios" role="radiogroup">
+            <button type="button" role="radio" aria-checked="false">Yes</button>
+            <button type="button" role="radio" aria-checked="false">No</button>
+          </div>
+        </fieldset>
+
+        <h2>Legal Acknowledgment</h2>
+        <label class="q">What is your availability or notice period?
+          <button type="button" class="dropdown" role="combobox" aria-haspopup="listbox" aria-expanded="false"><span class="value">Select</span> ▾</button>
+          <ul class="menu" role="listbox" hidden>
+            <li role="option">Immediately</li>
+            <li role="option">2 weeks</li>
+            <li role="option">4 weeks</li>
+            <li role="option">More than 12 weeks</li>
+          </ul>
+        </label>
+        <fieldset>
+          <legend>I authorize Tesla to consider me for other job opportunities for the next 36 months within Tesla in addition to the specific job I am applying for.</legend>
+          <div class="radios">
+            <label><input type="radio" name="other_jobs" value="Yes" /> Yes</label>
+            <label><input type="radio" name="other_jobs" value="No" /> No</label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Will you now or in the future require immigration sponsorship for employment with Tesla?</legend>
+          <div class="radios">
+            <label><input type="radio" name="sponsor" value="Yes" /> Yes</label>
+            <label><input type="radio" name="sponsor" value="No" /> No</label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Have you previously been employed by Tesla?</legend>
+          <div class="radios">
+            <label><input type="radio" name="prev_tesla" value="Yes" /> Yes</label>
+            <label><input type="radio" name="prev_tesla" value="No" /> No</label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Are you a former/current intern or contractor?</legend>
+          <div class="radios">
+            <label><input type="radio" name="former_intern" value="Yes" /> Yes</label>
+            <label><input type="radio" name="former_intern" value="No" /> No</label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Are you a current university student? You must be enrolled in an academic program during the internship period.</legend>
+          <div class="radios">
+            <label><input type="radio" name="student" value="Yes" /> Yes</label>
+            <label><input type="radio" name="student" value="No" /> No</label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Do you consent to receiving text messages throughout your application process including but not limited to interview details, pre-employment screening notifications and reminders?</legend>
+          <div class="radios">
+            <label><input type="radio" name="sms" value="Yes" /> Yes</label>
+            <label><input type="radio" name="sms" value="No" /> No</label>
+          </div>
+        </fieldset>
+
+        <h2>Terms and Conditions</h2>
+        <p>5. Tesla Talent Privacy Notice · 6. Tesla's Arbitration Agreement</p>
+        <div class="check-row">
+          <span class="box" role="checkbox" aria-checked="false" tabindex="0"></span>
+          <span>I have read and understand the statements above and accept them as conditions of employment.</span>
+        </div>
+        <label class="q">Legal Name <input name="legal_name" value="CA" /></label>
+
+        <h2>Equal Employee Opportunities</h2>
+        <label class="q"><span class="check-row"><span class="box" role="checkbox" aria-checked="false" tabindex="0"></span> I acknowledge that I have read and understood Tesla's Equal Employee Opportunities.</span></label>
+        <label class="q">Gender
+          <button type="button" class="dropdown" role="combobox" aria-haspopup="listbox" aria-expanded="false"><span class="value">Select</span> ▾</button>
+          <ul class="menu" role="listbox" hidden>
+            <li role="option">Male</li>
+            <li role="option">Female</li>
+            <li role="option">Decline to self-identify</li>
+          </ul>
+        </label>
+        <label class="q">Veteran Status
+          <button type="button" class="dropdown" role="combobox" aria-haspopup="listbox" aria-expanded="false"><span class="value">Select</span> ▾</button>
+          <ul class="menu" role="listbox" hidden>
+            <li role="option">I am not a protected veteran</li>
+            <li role="option">I identify as a protected veteran</li>
+            <li role="option">I do not wish to answer</li>
+          </ul>
+        </label>
+        <label class="q">Race/Ethnicity
+          <button type="button" class="dropdown" role="combobox" aria-haspopup="listbox" aria-expanded="false"><span class="value">Select</span> ▾</button>
+          <ul class="menu" role="listbox" hidden>
+            <li role="option">Hispanic or Latino</li>
+            <li role="option">White</li>
+            <li role="option">Black or African American</li>
+            <li role="option">Asian</li>
+            <li role="option">I do not wish to answer</li>
+          </ul>
+        </label>
+        <label class="q">Disability
+          <button type="button" class="dropdown" role="combobox" aria-haspopup="listbox" aria-expanded="false"><span class="value">Select</span> ▾</button>
+          <ul class="menu" role="listbox" hidden>
+            <li role="option">Yes, I have a disability, or have had one in the past</li>
+            <li role="option">No, I do not have a disability and have not had one in the past</li>
+            <li role="option">I do not want to answer</li>
+          </ul>
+        </label>
+      </form>
+
+      <div class="hud" id="hud">
+        <h3>What the bot inserted</h3>
+        <div id="rows"></div>
+      </div>
+    </main>
+    <script src="../src/profile.js"></script>
+    <script src="../src/matcher.js"></script>
+    <script src="../src/fill.js"></script>
+    <script>
+      document.querySelectorAll(".dropdown").forEach((btn) => {
+        const menu = btn.parentElement.querySelector(".menu");
+        btn.addEventListener("click", (event) => {
+          event.preventDefault();
+          const open = menu.hidden;
+          document.querySelectorAll(".menu").forEach((item) => { item.hidden = true; });
+          menu.hidden = !open;
+          btn.setAttribute("aria-expanded", String(open));
+        });
+        menu.querySelectorAll("[role='option']").forEach((opt) => {
+          opt.addEventListener("click", () => {
+            btn.querySelector(".value").textContent = opt.textContent.trim();
+            menu.hidden = true;
+            btn.setAttribute("aria-expanded", "false");
+          });
+        });
+      });
+
+      document.querySelectorAll("[role='checkbox']").forEach((box) => {
+        box.addEventListener("click", () => {
+          box.setAttribute("aria-checked", box.getAttribute("aria-checked") === "true" ? "false" : "true");
+        });
+      });
+
+      document.querySelectorAll("[role='radiogroup']").forEach((group) => {
+        group.querySelectorAll("[role='radio']").forEach((opt) => {
+          opt.addEventListener("click", () => {
+            group.querySelectorAll("[role='radio']").forEach((item) => item.setAttribute("aria-checked", "false"));
+            opt.setAttribute("aria-checked", "true");
+          });
+        });
+      });
+
+      const sample = {
+        firstName: "Alex",
+        lastName: "Rivera",
+        email: "alex.rivera@university.edu",
+        phone: "(555) 010-1234",
+        phoneType: "Mobile",
+        country: "United States",
+        internMonths: "7 months or more",
+        internFullTime: "Yes",
+        internThesis: "No",
+        noticePeriod: "More than 12 weeks",
+        teslaOtherJobs: "Yes",
+        sponsorship: "No",
+        teslaPreviouslyEmployed: "No",
+        teslaFormerIntern: "No",
+        currentStudent: "Yes",
+        smsConsent: "Yes",
+        teslaTerms: "Yes",
+        eeoAcknowledge: "Yes",
+        gender: "Decline to self-identify",
+        veteranStatus: "I do not wish to answer",
+        raceEthnicity: "I do not wish to answer",
+        disability: "I do not want to answer",
+        fullName: "Alex Rivera",
+      };
+      document.getElementById("fill").addEventListener("click", async () => {
+        let stored = {};
+        try { stored = await chrome.storage.local.get("profile"); } catch { stored = {}; }
+        const saved = stored.profile || {};
+        const hasSaved = Object.values(saved).some((value) => String(value || "").trim());
+        const profile = ApplyFillProfile.derive({ ...ApplyFillProfile.DEFAULTS, ...(hasSaved ? saved : sample) });
+        const results = await ApplyFill.fill(document, profile, { skipFilled: true });
+        const hud = document.getElementById("hud");
+        hud.classList.add("show");
+        document.getElementById("rows").innerHTML = results.length
+          ? results.map((item) => `<div><span>${item.section}</span><strong>${item.label}</strong><span>${item.value}</span></div>`).join("")
+          : `<div><span>Tesla</span><strong>Nothing to insert</strong><span>Save the Tesla Easy Apply section first.</span></div>`;
+      });
+    </script>
+  </body>
+</html>

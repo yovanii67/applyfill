@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Harbor Labs — Mechanical Engineering Intern</title>
+    <style>
+      :root { font-family: "Segoe UI", "Trebuchet MS", sans-serif; }
+      body { margin: 0; background: #f3efe6; color: #1b2420; }
+      header.banner { background: #16302a; color: #e9fff5; padding: 28px 8vw 24px; }
+      header.banner p { opacity: 0.75; margin: 0 0 6px; }
+      main { max-width: 720px; margin: -18px auto 80px; background: #fff; padding: 28px; border-radius: 18px; box-shadow: 0 18px 40px rgba(20, 40, 30, 0.08); }
+      h2 { font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase; color: #3b6f62; }
+      fieldset { border: 1px solid #e4ddd0; border-radius: 14px; margin: 0 0 18px; padding: 16px; }
+      legend { padding: 0 8px; font-weight: 700; }
+      label { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; font-size: 13px; }
+      .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      input, select, textarea { padding: 10px; border: 1px solid #cfc6b6; border-radius: 8px; font: inherit; }
+      button.fill {
+        background: #16302a; color: white; border: 0; border-radius: 10px; padding: 12px 16px; font-weight: 700; cursor: pointer;
+      }
+      .toolbar { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 18px; }
+      .note { color: #66736e; font-size: 13px; }
+      [data-applyfill] { outline: 2px solid #2ee6a6; outline-offset: 2px; }
+      .hud { margin-top: 16px; background: #10181d; color: #e8f4ee; border-radius: 14px; padding: 14px; display: none; }
+      .hud.show { display: block; }
+      .hud h3 { margin: 0 0 8px; color: #2ee6a6; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+      .hud div { display: grid; grid-template-columns: 140px 1fr 1fr; gap: 8px; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #1e2a30; }
+      @media (max-width: 700px) { .row { grid-template-columns: 1fr; } main { margin: 12px; } }
+    </style>
+  </head>
+  <body>
+    <header class="banner">
+      <p>Harbor Labs · Summer 2027</p>
+      <h1>Mechanical Engineering Intern</h1>
+    </header>
+    <main>
+      <div class="toolbar">
+        <p class="note">Practice form. Same blanks you see on Greenhouse, Handshake, Lever, and similar sites.</p>
+        <button class="fill" id="fill" type="button">Ask the bot to fill this</button>
+      </div>
+
+      <form id="app">
+        <fieldset>
+          <legend>Personal information</legend>
+          <div class="row">
+            <label>First name <input name="first_name" autocomplete="given-name" /></label>
+            <label>Last name <input name="last_name" autocomplete="family-name" /></label>
+          </div>
+          <label>Preferred name <input name="preferred_name" /></label>
+          <label>Full legal name <input name="full_name" autocomplete="name" /></label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Contact</legend>
+          <label>Email address <input type="email" name="email" autocomplete="email" /></label>
+          <label>Phone number <input type="tel" name="phone" autocomplete="tel" /></label>
+          <label>Street address <input name="address" autocomplete="street-address" /></label>
+          <div class="row">
+            <label>City <input name="city" autocomplete="address-level2" /></label>
+            <label>State <input name="state" autocomplete="address-level1" /></label>
+          </div>
+          <div class="row">
+            <label>ZIP code <input name="zip" autocomplete="postal-code" /></label>
+            <label>Country <input name="country" autocomplete="country-name" /></label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Education</legend>
+          <label>University / school <input name="school" /></label>
+          <div class="row">
+            <label>Degree <input name="degree" /></label>
+            <label>Major / field of study <input name="major" /></label>
+          </div>
+          <div class="row">
+            <label>GPA <input name="gpa" /></label>
+            <label>Expected graduation <input name="expected_graduation" /></label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Links</legend>
+          <label>LinkedIn URL <input name="linkedin" /></label>
+          <label>GitHub URL <input name="github" /></label>
+          <label>Portfolio URL <input name="portfolio" /></label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Work authorization</legend>
+          <label>Are you legally authorized to work in the United States?
+            <select name="work_auth">
+              <option value="">Select</option>
+              <option>Yes</option>
+              <option>No</option>
+            </select>
+          </label>
+          <label>Will you now or in the future require visa sponsorship?
+            <select name="sponsorship">
+              <option value="">Select</option>
+              <option>Yes</option>
+              <option>No</option>
+            </select>
+          </label>
+          <label>Earliest start date <input name="start_date" /></label>
+          <label>How did you hear about us? <input name="how_heard" /></label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Internship</legend>
+          <label>Are you a current university student?
+            <select name="current_student">
+              <option value="">Select</option>
+              <option>Yes</option>
+              <option>No</option>
+            </select>
+          </label>
+          <label>Are you 18 years of age or older?
+            <select name="over18">
+              <option value="">Select</option>
+              <option>Yes</option>
+              <option>No</option>
+            </select>
+          </label>
+          <div class="row">
+            <label>Internship term / season <input name="intern_term" /></label>
+            <label>Class year / standing <input name="class_year" /></label>
+          </div>
+          <label>Are you available for a full-time internship?
+            <select name="full_time_intern">
+              <option value="">Select</option>
+              <option>Yes</option>
+              <option>No</option>
+            </select>
+          </label>
+          <label>Hours per week <input name="hours_per_week" /></label>
+          <label>Willing to relocate?
+            <select name="relocate">
+              <option value="">Select</option>
+              <option>Yes</option>
+              <option>No</option>
+            </select>
+          </label>
+          <label>Have you previously applied to this company?
+            <select name="applied_before">
+              <option value="">Select</option>
+              <option>Yes</option>
+              <option>No</option>
+            </select>
+          </label>
+        </fieldset>
+      </form>
+
+      <div class="hud" id="hud">
+        <h3>What the bot inserted</h3>
+        <div id="rows"></div>
+      </div>
+    </main>
+    <script src="../src/profile.js"></script>
+    <script src="../src/matcher.js"></script>
+    <script src="../src/fill.js"></script>
+    <script>
+      const hud = document.getElementById("hud");
+      const rows = document.getElementById("rows");
+      document.getElementById("fill").addEventListener("click", async () => {
+        let stored = {};
+        try {
+          stored = await chrome.storage.local.get("profile");
+        } catch {
+          stored = {};
+        }
+        const sample = {
+          firstName: "Alex",
+          lastName: "Rivera",
+          preferredName: "Alex",
+          fullName: "Alex Rivera",
+          email: "alex.rivera@university.edu",
+          phone: "(555) 010-1234",
+          street: "123 Campus Ave",
+          city: "Austin",
+          state: "TX",
+          zip: "78701",
+          country: "United States",
+          school: "Example University",
+          degree: "Bachelor of Science",
+          major: "Mechanical Engineering",
+          gpa: "3.70",
+          classYear: "Junior",
+          graduationDate: "May 2027",
+          currentStudent: "Yes",
+          over18: "Yes",
+          internTerm: "Summer 2027",
+          internFullTime: "Yes",
+          hoursPerWeek: "40",
+          previouslyApplied: "No",
+          relocate: "Yes",
+          linkedin: "https://linkedin.com/in/example",
+          github: "https://github.com/example",
+          portfolio: "https://example.dev",
+          workAuth: "Yes",
+          sponsorship: "No",
+          startDate: "June 2027",
+          howHeard: "University career portal",
+        };
+        const saved = stored.profile || {};
+        const hasSaved = Object.values(saved).some((value) => String(value || "").trim());
+        const profile = ApplyFillProfile.derive({ ...ApplyFillProfile.DEFAULTS, ...(hasSaved ? saved : sample) });
+        const results = await ApplyFill.fill(document, profile, { skipFilled: true });
+        hud.classList.add("show");
+        rows.innerHTML = results.length
+          ? results.map((item) => `<div><span>${item.section}</span><strong>${item.label}</strong><span>${item.value}</span></div>`).join("")
+          : `<div><span>Profile</span><strong>Nothing to insert</strong><span>Save your details in Edit profile first.</span></div>`;
+      });
+    </script>
+  </body>
+</html>
