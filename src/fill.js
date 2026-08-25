@@ -151,6 +151,36 @@
     return text;
   }
 
+  function isUsTerritory(text) {
+    return /outlying|virgin islands|samoa|puerto rico|guam|mariana|micronesia|palau/.test(String(text || "").toLowerCase());
+  }
+
+  function isUsaWanted(wanted) {
+    const w = String(wanted || "").toLowerCase().replace(/[.]/g, "").trim();
+    if (/^(us|usa|u s a|united states|united states of america)$/.test(w)) return true;
+    return w.startsWith("united states") && !isUsTerritory(w);
+  }
+
+  function canonicalCountry(value) {
+    return isUsaWanted(value) ? "United States of America" : String(value || "").trim();
+  }
+
+  function countryOptionRank(text, wanted) {
+    const t = String(text || "").replace(/\s+/g, " ").trim().toLowerCase();
+    if (!t) return 0;
+    if (isUsaWanted(wanted)) {
+      if (isUsTerritory(t)) return 0;
+      if (t === "united states of america") return 6;
+      if (t === "united states") return 3;
+      if (t === "usa" || t === "us") return 2;
+      return 0;
+    }
+    const w = String(wanted || "").replace(/\s+/g, " ").trim().toLowerCase();
+    if (t === w) return 4;
+    if (w.length > 2 && (t.includes(w) || w.includes(t))) return 2;
+    return 0;
+  }
+
   function yesNo(value) {
     const text = String(value || "").trim().toLowerCase();
     if (["yes", "y", "true", "authorized", "1"].includes(text)) return "yes";
@@ -158,11 +188,19 @@
     return text;
   }
 
-  function chooseOption(select, raw) {
-    const wanted = String(raw || "").trim().toLowerCase();
+  function chooseOption(select, raw, key) {
+    const wanted = key === "country" ? canonicalCountry(raw) : String(raw || "").trim().toLowerCase();
     const yn = yesNo(raw);
     const options = [...select.options];
-    const exact = options.find((opt) => opt.value.toLowerCase() === wanted || opt.text.toLowerCase().trim() === wanted);
+    if (key === "country" || isUsaWanted(raw)) {
+      let best = null;
+      for (const opt of options) {
+        const rank = countryOptionRank(`${opt.value} ${opt.text}`, raw);
+        if (rank && (!best || rank > best.rank)) best = { opt, rank };
+      }
+      return best ? best.opt.value : null;
+    }
+    const exact = options.find((opt) => opt.value.toLowerCase() === wanted || opt.text.toLowerCase().trim() === wanted.toLowerCase());
     if (exact) return exact.value;
     const fuzzy = options.find((opt) => {
       const label = `${opt.value} ${opt.text}`.toLowerCase();
@@ -363,7 +401,8 @@
     return rows[a.length][b.length];
   }
 
-  function optionMatches(text, wanted, yn) {
+  function optionMatches(text, wanted, yn, key) {
+    if (key === "country" || isUsaWanted(wanted)) return countryOptionRank(text, wanted);
     const t = String(text || "").replace(/\s+/g, " ").trim().toLowerCase();
     const w = String(wanted || "").replace(/\s+/g, " ").trim().toLowerCase();
     if (!t || t.length > 220 || /^(select|next|previous|- select)/i.test(t)) return 0;
@@ -387,6 +426,9 @@
       "[class*='menu' i] li",
       "[class*='option' i]",
       "[class*='tds-list'] li",
+      "[data-automation-id*='promptOption']",
+      "[data-automation-id*='prompt-option']",
+      "[data-automation-id*='menuItem']",
     ].join(","));
     return [...nodes].filter((el) => {
       if (el.closest("#applyfill-host")) return false;
@@ -434,49 +476,64 @@
     return visible || clickTarget(el);
   }
 
-  function looksSelected(el, wanted) {
+  function looksSelected(el, wanted, key) {
     const shown = displayedText(clickTarget(el) || el);
-    return optionMatches(shown, wanted, yesNo(wanted)) >= 2;
+    return optionMatches(shown, wanted, yesNo(wanted), key) >= 2;
   }
 
-  function bestChoice(items, wanted, yn) {
+  function bestChoice(items, wanted, yn, key) {
     let best = null;
     for (const opt of items) {
-      const rank = optionMatches(opt.innerText, wanted, yn);
+      const rank = optionMatches(opt.innerText, wanted, yn, key);
       if (rank && (!best || rank > best.rank)) best = { opt, rank };
     }
     return best;
   }
 
-  async function pickFromList(el, raw) {
-    const wanted = String(raw || "").trim();
+  async function pickFromList(el, raw, key) {
+    const wanted = key === "country" ? canonicalCountry(raw) : String(raw || "").trim();
     const yn = yesNo(raw);
     if (!wanted) return false;
-    if (looksSelected(el, wanted)) return true;
+    if (looksSelected(el, wanted, key)) return true;
 
     const target = visibleChooser(el);
-    const already = bestChoice(nearbyMenuChoices(target), wanted, yn);
+    const already = bestChoice(nearbyMenuChoices(target), wanted, yn, key);
     if (already && already.rank >= 2) {
       await selectRadioOnPage(already.opt);
       await wait(160);
-      if (looksSelected(el, wanted) || looksSelected(target, wanted)) return true;
+      if (looksSelected(el, wanted, key) || looksSelected(target, wanted, key)) return true;
     }
 
     const before = new Set(menuChoices());
     tap(target);
-    await wait(320);
+    await wait(280);
+
+    if (key === "country") {
+      const search = document.querySelector("input[data-automation-id*='searchBox' i], input[placeholder*='Search' i]:not([type='hidden'])");
+      const typeInto = (search && search.offsetWidth > 0 ? search : (target.tagName === "INPUT" ? target : null));
+      if (typeInto) {
+        nativeSet(typeInto, wanted);
+        fire(typeInto);
+        await wait(280);
+      } else {
+        for (const letter of wanted.slice(0, 28)) {
+          target.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: letter, cancelable: true }));
+        }
+        await wait(220);
+      }
+    }
 
     const after = nearbyMenuChoices(target);
     const fresh = after.filter((item) => !before.has(item));
     const candidates = fresh.length ? fresh : after;
-    let hit = bestChoice(candidates, wanted, yn);
+    let hit = bestChoice(candidates, wanted, yn, key) || bestChoice(menuChoices(), wanted, yn, key);
 
     if (hit) {
       await selectRadioOnPage(hit.opt);
       await wait(160);
       tap(hit.opt);
       await wait(80);
-      return looksSelected(el, wanted) || looksSelected(target, wanted);
+      return looksSelected(el, wanted, key) || looksSelected(target, wanted, key);
     }
 
     if (candidates.length > 8) {
@@ -484,17 +541,17 @@
         target.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: letter, cancelable: true }));
       }
       await wait(200);
-      hit = bestChoice(menuChoices(), wanted, yn);
+      hit = bestChoice(menuChoices(), wanted, yn, key);
       if (hit) {
         await selectRadioOnPage(hit.opt);
         await wait(160);
         tap(hit.opt);
         await wait(80);
-        return looksSelected(el, wanted) || looksSelected(target, wanted);
+        return looksSelected(el, wanted, key) || looksSelected(target, wanted, key);
       }
       target.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "Enter" }));
       await wait(80);
-      return looksSelected(el, wanted) || looksSelected(target, wanted);
+      return looksSelected(el, wanted, key) || looksSelected(target, wanted, key);
     }
 
     return false;
@@ -515,8 +572,9 @@
     if (mode === "skip") return null;
     const skipFilled = settings?.skipFilled !== false;
     const fieldMeta = root.ApplyFillProfile.FIELDS.find((item) => item.key === match.key);
+    if (match.key === "country") value = canonicalCountry(value);
     const existing = currentValue(el);
-    if (skipFilled && existing && mode === "dropdown" && looksSelected(el, value)) return null;
+    if (skipFilled && existing && mode === "dropdown" && looksSelected(el, value, match.key)) return null;
     if (skipFilled && mode === "yesno" && isYesNoSelected(el, yesNo(value))) return null;
     if (skipFilled && existing && mode === "text") {
       const leftoverState = match.key === "fullName" && /^[A-Za-z]{2}$/.test(existing.trim());
@@ -528,15 +586,15 @@
       inserted = await setYesNo(el, value);
     } else if (mode === "dropdown") {
       if (el.tagName === "SELECT") {
-        const option = chooseOption(el, value);
+        const option = chooseOption(el, value, match.key);
         if (option != null) {
           el.value = option;
           fire(el);
         }
       }
-      inserted = await pickFromList(el, value) || looksSelected(el, value);
+      inserted = await pickFromList(el, value, match.key) || looksSelected(el, value, match.key);
     } else if (el.tagName === "SELECT") {
-      const option = chooseOption(el, value);
+      const option = chooseOption(el, value, match.key);
       if (option == null) return null;
       el.value = option;
       fire(el);

@@ -12,7 +12,7 @@
   };
 
   const SECTION_NOTES = {
-    intern: "These answers are reused on Greenhouse, Handshake, Lever, Workday, and ordinary intern forms. Copy the wording the form uses when you can.",
+    intern: "These answers are reused on Greenhouse, Handshake, Lever, Workday, and ordinary intern forms. Workday often says “Given Name(s)” or “Address Line 1” — those still use First name and Street address from this profile.",
     tesla: "Tesla-only questions. Dropdowns should match Tesla’s wording (for example “7 months or more”). Calendar dates are skipped.",
     agreements: "Set to Yes only after you have read those documents. ApplyFill will not submit the application for you.",
   };
@@ -30,7 +30,7 @@
     { key: "city", label: "City", section: "contact", placeholder: "Your city" },
     { key: "state", label: "State / region", section: "contact", placeholder: "CA" },
     { key: "zip", label: "ZIP / postal code", section: "contact", placeholder: "90001" },
-    { key: "country", label: "Country", section: "contact", placeholder: "United States" },
+    { key: "country", label: "Country", section: "contact", placeholder: "United States of America" },
     { key: "school", label: "School / university", section: "education", placeholder: "Your university" },
     { key: "degree", label: "Degree", section: "education", placeholder: "Bachelor of Science" },
     { key: "major", label: "Major", section: "education", placeholder: "Mechanical Engineering" },
@@ -96,6 +96,10 @@
     if (!next.website.trim() && next.portfolio.trim()) next.website = next.portfolio;
     if (!next.graduationDate.trim() && (next.gradMonth || next.gradYear)) {
       next.graduationDate = [next.gradMonth, next.gradYear].filter(Boolean).join(" ");
+    }
+    const country = next.country.trim().toLowerCase().replace(/\.+$/g, "");
+    if (/^(us|usa|u s a|united states)$/.test(country) || (country.startsWith("united states") && !/outlying|virgin|samoa|puerto|guam|mariana/.test(country))) {
+      next.country = "United States of America";
     }
     return next;
   }

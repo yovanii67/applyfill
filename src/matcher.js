@@ -21,12 +21,12 @@
 
   const ALIASES = {
     firstName: [
-      "first name", "firstname", "first_name", "given name", "givenname", "fname",
+      "first name", "firstname", "first_name", "given name", "given names", "givenname", "fname",
       "legal first", "legal first name", "preferred first", "forename", "legalname first", "applicant first",
     ],
     middleName: ["middle name", "middlename", "middle_name", "middle initial", "mi"],
     lastName: [
-      "last name", "lastname", "last_name", "family name", "surname", "lname",
+      "last name", "lastname", "last_name", "family name", "family names", "surname", "lname",
       "legal last", "legal last name", "familyname",
     ],
     preferredName: ["preferred name", "preferredname", "nick name", "nickname", "goes by", "chosen name"],
@@ -37,11 +37,17 @@
     pronouns: ["pronouns", "personal pronouns"],
     email: ["email", "e-mail", "email address", "work email", "school email", "contact email"],
     phone: ["phone", "telephone", "mobile", "cell", "phone number", "mobile number", "cell phone"],
-    street: ["street", "address", "address 1", "address line 1", "street address", "home address"],
+    street: [
+      "street", "address", "address 1", "address line 1", "address line one",
+      "street address", "home address", "address line1",
+    ],
     city: ["city", "town", "locality"],
     state: ["state", "province", "region", "state/province", "state or region"],
-    zip: ["zip", "zip code", "postal", "postal code", "postcode"],
-    country: ["country", "country/region", "country region of residence", "nation", "select country"],
+    zip: ["zip", "zip code", "postal", "postal code", "postcode", "zip postal"],
+    country: [
+      "country", "country/region", "country region of residence", "nation", "select country",
+      "country of residence", "home country",
+    ],
     school: [
       "school", "university", "college", "institution", "current school",
       "education institution", "university name", "current university", "school name",
@@ -169,8 +175,16 @@
     { id: "eightfold", test: /eightfold\.ai/i, label: "Eightfold" },
   ];
 
-  function normalize(value) {
+  function splitIdent(value) {
     return String(value || "")
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
+      .replace(/([a-zA-Z])(\d)/g, "$1 $2")
+      .replace(/(\d)([a-zA-Z])/g, "$1 $2");
+  }
+
+  function normalize(value) {
+    return splitIdent(value)
       .toLowerCase()
       .replace(/[_./#:[\]()]+/g, " ")
       .replace(/[^a-z0-9+ ]+/g, " ")
@@ -216,7 +230,8 @@
   function nearbyQuestion(el) {
     const labelledBy = el.getAttribute("aria-labelledby");
     if (labelledBy) {
-      const t = usefulQuestion(labelledBy.split(/\s+/).map((id) => document.getElementById(id)?.innerText || "").join(" "));
+      const joined = labelledBy.split(/\s+/).map((id) => document.getElementById(id)?.innerText || "").join(" ");
+      const t = shortCaption(joined) || usefulQuestion(joined);
       if (t) return t;
     }
 
@@ -249,6 +264,19 @@
     return "";
   }
 
+  function ancestorHints(el) {
+    const bits = [];
+    let node = el;
+    for (let i = 0; i < 8 && node && node !== document.body; i += 1) {
+      bits.push(node.getAttribute("data-automation-id"));
+      bits.push(node.getAttribute("data-automation-label"));
+      bits.push(node.getAttribute("data-uxi-element-id"));
+      bits.push(node.id);
+      node = node.parentElement;
+    }
+    return bits.filter(Boolean).join(" ");
+  }
+
   function blobFor(el) {
     const id = el.id || "";
     const labelledBy = el.getAttribute("aria-labelledby");
@@ -265,6 +293,7 @@
       el.getAttribute("placeholder"),
       el.getAttribute("aria-label"),
       el.getAttribute("data-automation-id"),
+      ancestorHints(el),
       el.getAttribute("data-testid"),
       el.title,
       shortCaption(labelledText),
@@ -309,10 +338,59 @@
     const n = normalize(needle);
     if (!haystack || !n) return 0;
     if (haystack === n) return 120;
-    if (hasNeedle(haystack, n)) return 80 + Math.min(20, n.length);
-    const parts = n.split(" ");
-    if (parts.length > 1 && parts.every((part) => hasNeedle(haystack, part))) return 60;
+    if (hasNeedle(haystack, n)) return 80 + Math.min(24, n.length);
+    const parts = n.split(" ").filter(Boolean);
+    if (parts.length > 1 && parts.every((part) => hasNeedle(haystack, part))) return 58 + Math.min(12, n.length);
     return 0;
+  }
+
+  const LABEL_HINTS = [
+    { key: "firstName", test: /\b(given name|given names|first name|legal first)\b/ },
+    { key: "lastName", test: /\b(family name|family names|last name|legal last|surname)\b/ },
+    { key: "middleName", test: /\b(middle name|middle initial)\b/ },
+    { key: "street", test: /\b(address line 1|address line one|address 1|street address)\b/ },
+    { key: "email", test: /\b(e ?mail|email address)\b/ },
+    { key: "phone", test: /\b(phone number|telephone|mobile number|cell phone)\b/ },
+    { key: "zip", test: /\b(zip code|postal code|postcode)\b/ },
+    { key: "fullName", test: /\b(full name|legal name)\b/ },
+  ];
+
+  const AUTOMATION_HINTS = [
+    { key: "firstName", test: /firstName|givenName|legalName--firstName|legalNameSection--firstName/i },
+    { key: "lastName", test: /lastName|familyName|legalName--lastName|legalNameSection--lastName/i },
+    { key: "middleName", test: /middleName|legalName--middleName/i },
+    { key: "street", test: /addressLine1|addressLineOne|address--addressLine1/i },
+    { key: "city", test: /address--city|(?:--|-)city$/i },
+    { key: "state", test: /countryRegion|stateProvince|address--countryRegion/i },
+    { key: "zip", test: /postalCode|zipCode|address--postalCode/i },
+    { key: "country", test: /countryDropdown|address--country(?!Region)|(?:--|-)country(?:--|\s|$)/i },
+    { key: "email", test: /emailAddress|(?:--|-)email$/i },
+    { key: "phone", test: /phoneNumber|phone--phoneNumber/i },
+  ];
+
+  function hintFromLabel(haystack) {
+    if (!haystack) return null;
+    if (/\baddress line (2|two|3|three)\b/.test(haystack)) return null;
+    if (/\bcountry of birth\b/.test(haystack)) return null;
+    for (const hint of LABEL_HINTS) {
+      if (!hint.test.test(haystack)) continue;
+      if (hint.key === "street" && /\bemail\b/.test(haystack)) continue;
+      if (hint.key === "fullName" && /\b(given|first|last|family)\b/.test(haystack)) continue;
+      if (hint.key === "country" && /\b(birth|citizenship)\b/.test(haystack)) continue;
+      return hint.key;
+    }
+    if (/\baddress\b/.test(haystack) && !/\b(email|line 2|line two|country)\b/.test(haystack)) return "street";
+    return null;
+  }
+
+  function hintFromAutomation(el) {
+    const blob = ancestorHints(el);
+    if (!blob) return null;
+    if (/addressLine2|addressLineTwo|address--addressLine2/i.test(blob)) return null;
+    for (const hint of AUTOMATION_HINTS) {
+      if (hint.test.test(blob)) return hint.key;
+    }
+    return null;
   }
 
   const DATE_KEYS = new Set(["internStartDate", "graduationDate", "startDate"]);
@@ -356,6 +434,8 @@
     if (popup === "listbox" || popup === "menu" || popup === "true") return true;
     if (el.getAttribute("aria-expanded") != null && el.tagName !== "INPUT") return true;
     if (/dropdown|combobox|select-input|tds-select|form-select|react-select/.test(cls)) return true;
+    const autoId = el.getAttribute("data-automation-id") || "";
+    if (/dropdown|selectOne|promptSelection/i.test(autoId) && el.tagName !== "INPUT") return true;
     if (isSelectPlaceholder(el)) return true;
     return false;
   }
@@ -415,7 +495,15 @@
     }
 
     const haystack = blobFor(el);
-    if (/\blegal name\b/.test(haystack) && !/\blegal (first|last)\b/.test(haystack)) {
+    if (/\baddress line (2|two|3|three)\b/.test(haystack)) return null;
+
+    const autoKey = hintFromAutomation(el);
+    if (autoKey) return { key: autoKey, via: "automation", section: sectionFor(el) };
+
+    const labelKey = hintFromLabel(haystack);
+    if (labelKey) return { key: labelKey, via: "label", section: sectionFor(el) };
+
+    if (/\blegal name\b/.test(haystack) && !/\b(legal first|legal last|given name|family name)\b/.test(haystack)) {
       return { key: "fullName", via: "label", section: sectionFor(el) };
     }
     if (/\b(e-?mail)\b/.test(haystack) && !/\b(email type|phone type)\b/.test(haystack) && (type === "email" || type === "text" || type === "" && el.tagName === "INPUT")) {
@@ -449,6 +537,7 @@
     let best = null;
     for (const [key, aliases] of Object.entries(ALIASES)) {
       if (key === "internStartDate") continue;
+      if (key === "street" && /\baddress line (2|two|3|three)\b/.test(haystack)) continue;
       if (AGREEMENT_KEYS.has(key) && !isAgreeWidget(el)) continue;
       for (const alias of aliases) {
         const value = score(haystack, alias);
@@ -514,9 +603,13 @@
         "[class*='react-select']",
         "[class*='checkbox' i]",
         "[class*='Checkbox']",
+        "[data-automation-id*='Dropdown']",
+        "[data-automation-id*='selectOneMenu']",
+        "[data-automation-id*='promptSelection']",
       ].join(",")),
       ...collectPlaceholderSelects(doc),
     ].filter((el) => {
+      if (/promptOption|prompt-option|menuItem/i.test(el.getAttribute("data-automation-id") || "")) return false;
       if (el.id === "applyfill-host" || el.closest("#applyfill-host")) return false;
       if (isDateControl(el)) return false;
       if (isHiddenish(el) && !isRadioLike(el)) return false;

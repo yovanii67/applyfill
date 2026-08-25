@@ -52,6 +52,26 @@
         </fieldset>
 
         <fieldset>
+          <legend>Workday-style labels</legend>
+          <p class="note">Same profile answers, different wording (Given Name, Address Line 1, United States of America).</p>
+          <div class="row">
+            <label>Given Name(s) <input name="wd_given" data-automation-id="legalName--firstName" /></label>
+            <label>Family Name <input name="wd_family" data-automation-id="legalName--lastName" /></label>
+          </div>
+          <label>Address Line 1 <input name="wd_address1" data-automation-id="address--addressLine1" /></label>
+          <label>Country
+            <select name="wd_country" data-automation-id="address--country">
+              <option value="">Select</option>
+              <option>Canada</option>
+              <option>Mexico</option>
+              <option>United States Minor Outlying Islands</option>
+              <option>United States of America</option>
+              <option>United States Virgin Islands</option>
+            </select>
+          </label>
+        </fieldset>
+
+        <fieldset>
           <legend>Contact</legend>
           <label>Email address <input type="email" name="email" autocomplete="email" /></label>
           <label>Phone number <input type="tel" name="phone" autocomplete="tel" /></label>
@@ -180,7 +200,7 @@
           city: "Austin",
           state: "TX",
           zip: "78701",
-          country: "United States",
+          country: "United States of America",
           school: "Example University",
           degree: "Bachelor of Science",
           major: "Mechanical Engineering",
