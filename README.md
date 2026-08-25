@@ -4,7 +4,7 @@ A Chrome / Edge extension that types **your** saved internship answers into appl
 
 It does **not** submit the form. It does **not** upload a resume. Each person installs their own copy and saves their own profile on their own laptop.
 
-Tesla Easy Apply is included. The same profile also fills common intern questions on Greenhouse, Handshake, Lever, Workday, Ashby, LinkedIn, Indeed, and ordinary HTML forms.
+Easy Apply is included. The same profile also fills common intern questions on Greenhouse, Handshake, Lever, Workday, Ashby, LinkedIn, Indeed, and ordinary HTML forms.
 
 ## Privacy (read this first)
 
