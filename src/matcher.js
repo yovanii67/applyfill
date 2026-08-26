@@ -39,7 +39,8 @@
     phone: ["phone", "telephone", "mobile", "cell", "phone number", "mobile number", "cell phone"],
     street: [
       "street", "address", "address 1", "address line 1", "address line one",
-      "street address", "home address", "address line1",
+      "street address", "home address", "address line1", "current location", "home location",
+      "your location", "location", "where are you located", "current city",
     ],
     city: ["city", "town", "locality"],
     state: ["state", "province", "region", "state/province", "state or region"],
@@ -58,12 +59,20 @@
     gpa: ["gpa", "grade point", "cumulative gpa", "current gpa"],
     classYear: ["class year", "academic standing", "year in school", "classification", "freshman", "sophomore", "junior", "senior", "year of study"],
     campus: ["which campus", "campus location", "university campus", "preferred campus"],
-    gradMonth: ["graduation month", "grad month"],
-    gradYear: ["graduation year", "grad year", "year of graduation", "expected year"],
+    gradMonth: [
+      "graduation month", "grad month", "end date month", "end month",
+      "expected graduation month", "graduation end month", "degree end month",
+      "education end month", "endDateMonth",
+    ],
+    gradYear: [
+      "graduation year", "grad year", "year of graduation", "expected year",
+      "end date year", "end year", "expected graduation year", "graduation end year",
+      "degree end year", "education end year", "endDateYear",
+    ],
     graduationDate: [
       "graduation date", "grad date", "expected graduation", "graduation",
       "date of graduation", "anticipated graduation", "anticipated graduation date",
-      "expected grad", "when do you graduate",
+      "expected grad", "when do you graduate", "education end date",
     ],
     linkedin: ["linkedin", "linked in", "linkedin url", "linkedin profile"],
     github: ["github", "git hub", "github url"],
@@ -140,7 +149,7 @@
     phoneType: ["contact phone type", "phone type", "phone device type", "select type", "contact phone"],
     desiredRole: ["desired role", "job title", "role applying", "desired title"],
     locationPref: ["preferred location", "desired location", "location preference", "job location"],
-    howHeard: ["how did you hear", "how you heard", "referral source", "hear about", "how did you hear about this job", "how did you hear about us"],
+    howHeard: ["how did you hear", "how you heard", "heard about", "referral source", "hear about", "how did you hear about this job", "how did you hear about us"],
     referralName: ["referral name", "referred by", "who referred", "employee referral", "name of referrer"],
     relocate: ["relocate", "willing to relocate", "open to relocation"],
     languages: ["languages spoken", "language proficiency", "languages"],
@@ -153,6 +162,7 @@
     "teslaOtherJobs", "sponsorship", "teslaPreviouslyEmployed", "teslaFormerIntern", "currentStudent",
     "smsConsent", "eeoAcknowledge", "teslaTerms", "agreeTerms", "gender", "veteranStatus", "raceEthnicity", "disability",
     "gpa", "workAuth", "classYear", "campus", "hoursPerWeek", "previouslyApplied", "referralName", "languages",
+    "gradMonth", "gradYear", "graduationDate",
   ];
 
   const ATS_HOSTS = [
@@ -303,6 +313,7 @@
       wrappingLabel ? shortCaption(wrappingLabel.innerText) : "",
       wrapText,
       nearbyQuestion(el),
+      sectionFor(el),
     ].join(" "));
   }
 
@@ -348,7 +359,9 @@
     { key: "firstName", test: /\b(given name|given names|first name|legal first)\b/ },
     { key: "lastName", test: /\b(family name|family names|last name|legal last|surname)\b/ },
     { key: "middleName", test: /\b(middle name|middle initial)\b/ },
-    { key: "street", test: /\b(address line 1|address line one|address 1|street address)\b/ },
+    { key: "gradMonth", test: /\b(end date month|end-date-month|end month|graduation month|grad month|expected graduation month)\b/ },
+    { key: "gradYear", test: /\b(end date year|end-date-year|end year|graduation year|grad year|expected graduation year)\b/ },
+    { key: "street", test: /\b(address line 1|address line one|address 1|street address|current location|home location|your location)\b/ },
     { key: "email", test: /\b(e ?mail|email address)\b/ },
     { key: "phone", test: /\b(phone number|telephone|mobile number|cell phone)\b/ },
     { key: "zip", test: /\b(zip code|postal code|postcode)\b/ },
@@ -380,6 +393,9 @@
       return hint.key;
     }
     if (/\baddress\b/.test(haystack) && !/\b(email|line 2|line two|country)\b/.test(haystack)) return "street";
+    if (/\blocation\b/.test(haystack) && !/\b(preferred|desired|job|campus|work site|work location|office|relocat)\b/.test(haystack)) {
+      return "street";
+    }
     return null;
   }
 
@@ -397,7 +413,7 @@
   const DROPDOWN_KEYS = new Set([
     "phoneType", "country", "internMonths", "internFullTime", "noticePeriod",
     "internTerm", "classYear", "gender", "veteranStatus", "raceEthnicity", "disability", "workAuth",
-    "howHeard", "relocate",
+    "howHeard", "relocate", "gradMonth", "gradYear",
   ]);
   const YES_NO_KEYS = new Set([
     "internThesis", "teslaOtherJobs", "teslaPreviouslyEmployed", "teslaFormerIntern",
@@ -442,8 +458,8 @@
 
   function isSelectPlaceholder(el) {
     const t = `${el.innerText || ""} ${el.value || ""} ${el.placeholder || ""}`.replace(/\s+/g, " ").trim();
-    if (t.length > 48) return false;
-    return /^[-–—\s]*select\b/i.test(t);
+    if (t.length > 72) return false;
+    return /^[-–—\s]*select\b/i.test(t) || /\bselect\.\.\.\s*$/i.test(t);
   }
 
   function isHiddenish(el) {
@@ -467,13 +483,19 @@
 
   function isDateControl(el) {
     const type = (el.type || "").toLowerCase();
-    if (["date", "datetime-local", "month"].includes(type)) return true;
+    const nearby = nearbyQuestion(el);
+    const own = [
+      el.innerText, el.value, el.placeholder, el.getAttribute("aria-label"),
+      el.closest("label")?.innerText, nearby, el.getAttribute("name"), el.id,
+    ].join(" ").toLowerCase();
+    const monthYearField = /\b(end date month|end date year|end month|end year|graduation month|graduation year|grad month|grad year|expected graduation month|expected graduation year)\b/.test(own);
+    const chooser = el.tagName === "SELECT" || isChooser(el) || isSelectPlaceholder(el);
+    if (monthYearField || (chooser && /\b(month|year)\b/.test(own))) return false;
+    if (type === "date" || type === "datetime-local") return true;
     const cls = classText(el);
     const hint = `${cls} ${el.getAttribute("placeholder") || ""} ${el.getAttribute("aria-label") || ""}`.toLowerCase();
-    if (/datepicker|date-picker|date_picker|calendar/.test(hint)) return true;
-    const wrap = el.closest("[class*='date' i], [class*='calendar' i]");
-    if (wrap && /date|calendar/.test(classText(wrap))) return true;
-    if (el.parentElement?.querySelector("[class*='calendar' i], [aria-label*='calendar' i], [aria-label*='choose date' i]")) return true;
+    if (/datepicker|date-picker|date_picker|calendar-picker/.test(hint)) return true;
+    if (el.closest("[class*='datepicker' i], [class*='DatePicker'], [aria-label*='calendar' i]")) return true;
     return false;
   }
 
@@ -483,7 +505,7 @@
     const chooser = isChooser(el);
     const dateLike = isDateControl(el);
     const radioLike = isRadioLike(el);
-    if (dateLike || DATE_KEYS.has(el.getAttribute("data-applyfill") || "")) return null;
+    if ((dateLike && !chooser) || DATE_KEYS.has(el.getAttribute("data-applyfill") || "")) return null;
     if (el.readOnly && !chooser && !radioLike) return null;
     if (["hidden", "password", "file", "submit", "image", "reset", "search", "color"].includes(type)) {
       return null;
@@ -538,6 +560,7 @@
     for (const [key, aliases] of Object.entries(ALIASES)) {
       if (key === "internStartDate") continue;
       if (key === "street" && /\baddress line (2|two|3|three)\b/.test(haystack)) continue;
+      if (key === "street" && /\b(preferred location|desired location|job location|campus location|work site|relocat)\b/.test(haystack)) continue;
       if (AGREEMENT_KEYS.has(key) && !isAgreeWidget(el)) continue;
       for (const alias of aliases) {
         const value = score(haystack, alias);
@@ -611,7 +634,7 @@
     ].filter((el) => {
       if (/promptOption|prompt-option|menuItem/i.test(el.getAttribute("data-automation-id") || "")) return false;
       if (el.id === "applyfill-host" || el.closest("#applyfill-host")) return false;
-      if (isDateControl(el)) return false;
+      if (isDateControl(el) && !isChooser(el) && el.tagName !== "SELECT") return false;
       if (isHiddenish(el) && !isRadioLike(el)) return false;
       const aria = (el.getAttribute("aria-label") || "").toLowerCase();
       if (el.tagName === "BUTTON" && /calendar|previous month|next month|choose date/.test(aria) && !isRadioLike(el)) return false;

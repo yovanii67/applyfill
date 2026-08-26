@@ -15,7 +15,14 @@
       legend { padding: 0 8px; font-weight: 700; }
       label { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; font-size: 13px; }
       .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-      input, select, textarea { padding: 10px; border: 1px solid #cfc6b6; border-radius: 8px; font: inherit; }
+      input, select, textarea, .dropdown { padding: 10px; border: 1px solid #cfc6b6; border-radius: 8px; font: inherit; }
+      .dropdown { display: flex; justify-content: space-between; align-items: center; background: #fff; width: 100%; text-align: left; cursor: pointer; min-height: 42px; }
+      .float-box { position: relative; border: 1px solid #cfc6b6; border-radius: 8px; padding: 8px 10px 10px; background: #fff; }
+      .float-label { position: absolute; top: 6px; left: 10px; font-size: 11px; color: #66736e; }
+      .float-box .dropdown { border: 0; padding: 16px 0 2px; min-height: 36px; }
+      .menu { list-style: none; margin: 4px 0 0; padding: 6px 0; border: 1px solid #cfc6b6; background: #fff; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.08); }
+      .menu li { padding: 8px 12px; cursor: pointer; }
+      .menu li:hover { background: #f3efe6; }
       button.fill {
         background: #16302a; color: white; border: 0; border-radius: 10px; padding: 12px 16px; font-weight: 700; cursor: pointer;
       }
@@ -97,6 +104,43 @@
             <label>GPA <input name="gpa" /></label>
             <label>Expected graduation <input name="expected_graduation" /></label>
           </div>
+          <div class="row">
+            <label>End date month *
+              <select name="end_month">
+                <option value="">Select...</option>
+                <option>January</option>
+                <option>May</option>
+                <option>June</option>
+                <option value="06">Jun</option>
+                <option>December</option>
+              </select>
+            </label>
+            <label>End date year *
+              <select name="end_year">
+                <option value="">Select...</option>
+                <option>2025</option>
+                <option>2026</option>
+                <option>2027</option>
+                <option>2028</option>
+              </select>
+            </label>
+          </div>
+          <div class="row">
+            <div class="DatePicker float-box">
+              <span class="float-label">End date month *</span>
+              <button type="button" class="dropdown" id="ashbyMonth" role="combobox" aria-haspopup="listbox">Select...</button>
+              <ul class="menu" id="ashbyMonthMenu" hidden role="listbox">
+                <li role="option">January</li>
+                <li role="option">May</li>
+                <li role="option">Jun</li>
+                <li role="option">June</li>
+                <li role="option">December</li>
+              </ul>
+            </div>
+            <label>Location <input name="person_location" /></label>
+          </div>
+          <label>Current location <input name="current_location" /></label>
+          <label>Tell us how you heard about Zipline and this job! * <input name="heard_zipline" /></label>
         </fieldset>
 
         <fieldset>
@@ -180,6 +224,18 @@
     <script src="../src/matcher.js"></script>
     <script src="../src/fill.js"></script>
     <script>
+      const monthBtn = document.getElementById("ashbyMonth");
+      const monthMenu = document.getElementById("ashbyMonthMenu");
+      monthBtn.addEventListener("click", () => {
+        monthMenu.hidden = !monthMenu.hidden;
+      });
+      monthMenu.addEventListener("click", (event) => {
+        const item = event.target.closest("[role='option']");
+        if (!item) return;
+        monthBtn.textContent = item.textContent.trim();
+        monthMenu.hidden = true;
+      });
+
       const hud = document.getElementById("hud");
       const rows = document.getElementById("rows");
       document.getElementById("fill").addEventListener("click", async () => {
@@ -206,7 +262,9 @@
           major: "Mechanical Engineering",
           gpa: "3.70",
           classYear: "Junior",
-          graduationDate: "May 2027",
+          graduationDate: "June 2027",
+          gradMonth: "June",
+          gradYear: "2027",
           currentStudent: "Yes",
           over18: "Yes",
           internTerm: "Summer 2027",

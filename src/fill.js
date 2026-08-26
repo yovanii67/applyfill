@@ -181,6 +181,33 @@
     return 0;
   }
 
+  function monthOptionRank(text, wanted) {
+    const months = [
+      ["january", "jan", "01", "1"],
+      ["february", "feb", "02", "2"],
+      ["march", "mar", "03", "3"],
+      ["april", "apr", "04", "4"],
+      ["may", "may", "05", "5"],
+      ["june", "jun", "06", "6"],
+      ["july", "jul", "07", "7"],
+      ["august", "aug", "08", "8"],
+      ["september", "sep", "sept", "09", "9"],
+      ["october", "oct", "10"],
+      ["november", "nov", "11"],
+      ["december", "dec", "12"],
+    ];
+    const t = String(text || "").replace(/\s+/g, " ").trim().toLowerCase();
+    const w = String(wanted || "").replace(/\s+/g, " ").trim().toLowerCase();
+    if (!t || !w || t.length > 24) return 0;
+    for (const names of months) {
+      const wantedHit = names.some((n) => w === n || w.startsWith(`${n} `));
+      if (!wantedHit) continue;
+      if (t === names[0]) return 6;
+      if (names.some((n) => t === n || t.startsWith(`${n} `) || t === String(Number(n)))) return 5;
+    }
+    return 0;
+  }
+
   function yesNo(value) {
     const text = String(value || "").trim().toLowerCase();
     if (["yes", "y", "true", "authorized", "1"].includes(text)) return "yes";
@@ -202,6 +229,12 @@
     }
     const exact = options.find((opt) => opt.value.toLowerCase() === wanted || opt.text.toLowerCase().trim() === wanted.toLowerCase());
     if (exact) return exact.value;
+    let ranked = null;
+    for (const opt of options) {
+      const rank = optionMatches(opt.text, raw, yn, key);
+      if (rank && (!ranked || rank > ranked.rank)) ranked = { opt, rank };
+    }
+    if (ranked) return ranked.opt.value;
     const fuzzy = options.find((opt) => {
       const label = `${opt.value} ${opt.text}`.toLowerCase();
       if (yn === "yes") return /\byes\b|authorized|eligible|citizen|permanent/.test(label) && !/not |no\b|sponsor/.test(label);
@@ -403,6 +436,8 @@
 
   function optionMatches(text, wanted, yn, key) {
     if (key === "country" || isUsaWanted(wanted)) return countryOptionRank(text, wanted);
+    const monthHit = monthOptionRank(text, wanted);
+    if (monthHit) return monthHit;
     const t = String(text || "").replace(/\s+/g, " ").trim().toLowerCase();
     const w = String(wanted || "").replace(/\s+/g, " ").trim().toLowerCase();
     if (!t || t.length > 220 || /^(select|next|previous|- select)/i.test(t)) return 0;
@@ -508,7 +543,7 @@
     tap(target);
     await wait(280);
 
-    if (key === "country") {
+    if (["country", "gradMonth", "gradYear", "howHeard", "classYear"].includes(key)) {
       const search = document.querySelector("input[data-automation-id*='searchBox' i], input[placeholder*='Search' i]:not([type='hidden'])");
       const typeInto = (search && search.offsetWidth > 0 ? search : (target.tagName === "INPUT" ? target : null));
       if (typeInto) {
@@ -557,52 +592,82 @@
     return false;
   }
 
-  function controlMode(el, match) {
+  function fillModes(el, match) {
     const M = root.ApplyFillMatcher;
-    if (M.isDateControl(el) || match.key === "internStartDate") return "skip";
-    if (M.isChooser(el) || el.tagName === "SELECT" || M.isSelectPlaceholder(el)) return "dropdown";
-    if (M.isRadioLike(el) || M.isYesNoChoice(el) || (M.YES_NO_KEYS.has(match.key) && !M.isChooser(el))) return "yesno";
-    if (M.DROPDOWN_KEYS.has(match.key)) return "dropdown";
-    return "text";
+    if (match.key === "internStartDate") return ["skip"];
+    if (M.isDateControl(el) && !["gradMonth", "gradYear", "graduationDate"].includes(match.key)) return ["skip"];
+    const modes = [];
+    if (M.isChooser(el) || el.tagName === "SELECT" || M.isSelectPlaceholder(el)) {
+      modes.push("dropdown");
+    }
+    if (M.isRadioLike(el) || M.isYesNoChoice(el) || M.isAgreeWidget?.(el) || (M.YES_NO_KEYS.has(match.key) && !M.isChooser(el))) {
+      modes.push("yesno");
+    }
+    if (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT") {
+      modes.push("text");
+    }
+    if (!modes.length) modes.push("text");
+    return [...new Set(modes)];
   }
 
-  async function applyOne(el, match, value, settings, used) {
-    if (used.has(match.key)) return null;
-    const mode = controlMode(el, match);
-    if (mode === "skip") return null;
-    const skipFilled = settings?.skipFilled !== false;
-    const fieldMeta = root.ApplyFillProfile.FIELDS.find((item) => item.key === match.key);
-    if (match.key === "country") value = canonicalCountry(value);
-    const existing = currentValue(el);
-    if (skipFilled && existing && mode === "dropdown" && looksSelected(el, value, match.key)) return null;
-    if (skipFilled && mode === "yesno" && isYesNoSelected(el, yesNo(value))) return null;
-    if (skipFilled && existing && mode === "text") {
-      const leftoverState = match.key === "fullName" && /^[A-Za-z]{2}$/.test(existing.trim());
-      if (!leftoverState) return null;
-    }
+  function controlMode(el, match) {
+    return fillModes(el, match)[0] || "text";
+  }
 
-    let inserted = false;
-    if (mode === "yesno") {
-      inserted = await setYesNo(el, value);
-    } else if (mode === "dropdown") {
+  async function tryMode(el, match, value, mode) {
+    if (mode === "yesno") return setYesNo(el, value);
+    if (mode === "dropdown") {
       if (el.tagName === "SELECT") {
         const option = chooseOption(el, value, match.key);
         if (option != null) {
           el.value = option;
           fire(el);
+          return true;
         }
       }
-      inserted = await pickFromList(el, value, match.key) || looksSelected(el, value, match.key);
-    } else if (el.tagName === "SELECT") {
+      return pickFromList(el, value, match.key) || looksSelected(el, value, match.key);
+    }
+    if (el.tagName === "SELECT") {
       const option = chooseOption(el, value, match.key);
-      if (option == null) return null;
+      if (option == null) return false;
       el.value = option;
       fire(el);
-      inserted = true;
-    } else {
-      nativeSet(el, value);
-      fire(el);
-      inserted = true;
+      return true;
+    }
+    nativeSet(el, value);
+    fire(el);
+    return true;
+  }
+
+  const MULTI_FILL_KEYS = new Set([
+    "street", "city", "state", "zip", "country",
+    "firstName", "lastName", "middleName",
+    "gradMonth", "gradYear", "graduationDate",
+    "linkedin", "email", "phone", "howHeard",
+  ]);
+
+  async function applyOne(el, match, value, settings, used) {
+    if (used.has(match.key) && !MULTI_FILL_KEYS.has(match.key)) return null;
+    const modes = fillModes(el, match);
+    if (modes[0] === "skip") return null;
+    const skipFilled = settings?.skipFilled !== false;
+    const fieldMeta = root.ApplyFillProfile.FIELDS.find((item) => item.key === match.key);
+    if (match.key === "country") value = canonicalCountry(value);
+    const existing = currentValue(el);
+    const primary = modes[0];
+    if (skipFilled && existing && primary === "dropdown" && looksSelected(el, value, match.key)) return null;
+    if (skipFilled && primary === "yesno" && isYesNoSelected(el, yesNo(value))) return null;
+    if (skipFilled && existing && primary === "text") {
+      const leftoverState = match.key === "fullName" && /^[A-Za-z]{2}$/.test(existing.trim());
+      if (!leftoverState) return null;
+    }
+
+    let inserted = false;
+    let mode = primary;
+    for (const next of modes) {
+      mode = next;
+      inserted = await tryMode(el, match, value, next);
+      if (inserted) break;
     }
 
     if (!inserted) return null;
@@ -624,45 +689,31 @@
     const nodes = root.ApplyFillMatcher.collectFields(doc);
     const used = new Set();
     const results = [];
-    const dropdowns = [];
-    const choices = [];
-    const rest = [];
+    const queue = [];
 
     for (const el of nodes) {
       const match = root.ApplyFillMatcher.matchField(el);
       if (!match) continue;
       const value = String(profile[match.key] || "").trim();
       if (!value) continue;
-      const mode = controlMode(el, match);
-      if (mode === "skip") continue;
-      if (mode === "dropdown") dropdowns.push({ el, match, value });
-      else if (mode === "yesno") choices.push({ el, match, value });
-      else rest.push({ el, match, value });
+      const modes = fillModes(el, match);
+      if (modes[0] === "skip") continue;
+      queue.push({ el, match, value, modes });
     }
 
-    if (choices.length || dropdowns.length) {
-      if (chrome?.runtime?.sendMessage) {
-        try { await chrome.runtime.sendMessage({ type: "DEBUGGER_ATTACH" }); } catch { /* ignore */ }
-      }
+    const needsClick = queue.some((item) => item.modes.some((mode) => mode === "dropdown" || mode === "yesno"));
+    if (needsClick && chrome?.runtime?.sendMessage) {
+      try { await chrome.runtime.sendMessage({ type: "DEBUGGER_ATTACH" }); } catch { /* ignore */ }
     }
     try {
-      for (const item of dropdowns) {
-        const row = await applyOne(item.el, item.match, item.value, settings || {}, used);
-        if (row) results.push(row);
-      }
-      for (const item of choices) {
+      for (const item of queue) {
         const row = await applyOne(item.el, item.match, item.value, settings || {}, used);
         if (row) results.push(row);
       }
     } finally {
-      if ((choices.length || dropdowns.length) && chrome?.runtime?.sendMessage) {
+      if (needsClick && chrome?.runtime?.sendMessage) {
         try { await chrome.runtime.sendMessage({ type: "DEBUGGER_DETACH" }); } catch { /* ignore */ }
       }
-    }
-
-    for (const item of rest) {
-      const row = await applyOne(item.el, item.match, item.value, settings || {}, used);
-      if (row) results.push(row);
     }
 
     return results;

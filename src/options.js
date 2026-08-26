@@ -37,7 +37,7 @@ for (const [section, fields] of grouped) {
 
 async function load() {
   const { profile, settings } = await chrome.storage.local.get(["profile", "settings"]);
-  const merged = { ...ApplyFillProfile.DEFAULTS, ...(profile || {}) };
+  const merged = ApplyFillProfile.derive({ ...ApplyFillProfile.DEFAULTS, ...(profile || {}) });
   for (const input of form.elements) {
     if (input.name) input.value = merged[input.name] || "";
   }
@@ -48,16 +48,18 @@ async function load() {
 }
 
 document.getElementById("save").addEventListener("click", async () => {
-  const profile = {};
-  for (const input of form.elements) {
-    if (input.name) profile[input.name] = input.value.trim();
-  }
+  const profile = ApplyFillProfile.derive(
+    Object.fromEntries([...form.elements].filter((input) => input.name).map((input) => [input.name, input.value.trim()])),
+  );
   const settings = {
     skipFilled: document.getElementById("skipFilled").checked,
     showFab: document.getElementById("showFab").checked,
     autoFillAts: document.getElementById("autoFillAts").checked,
   };
   await chrome.storage.local.set({ profile, settings });
+  for (const input of form.elements) {
+    if (input.name) input.value = profile[input.name] || "";
+  }
   toast.hidden = false;
   setTimeout(() => { toast.hidden = true; }, 1600);
 });
