@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ApplyFill tracker</title>
+    <link rel="stylesheet" href="tracker.css" />
+  </head>
+  <body>
+    <main>
+      <header class="hero-card">
+        <div class="hero-copy">
+          <div class="face" aria-hidden="true">
+            <span class="antenna"></span>
+            <span class="eye left"></span>
+            <span class="eye right"></span>
+            <span class="mouth"></span>
+          </div>
+          <div>
+            <p class="kicker">Separate from autofill</p>
+            <h1>Internship tracker</h1>
+            <p class="lede">Scan a posting with <strong>Alt + Shift + D</strong>. The bot asks before it saves. Edit any cell here — nothing leaves this device.</p>
+            <p class="page-links"><a href="options.html">Edit profile</a></p>
+          </div>
+        </div>
+        <div class="hero-side">
+          <div class="progress-block">
+            <div class="progress-meta">
+              <span>Tracked</span>
+              <strong id="count">0</strong>
+            </div>
+          </div>
+          <button id="add" type="button">Add internship</button>
+          <p id="toast" class="toast" hidden>Saved on this device.</p>
+        </div>
+      </header>
+
+      <section class="legend" aria-label="Status colors">
+        <span class="key applied">Applied — no color</span>
+        <span class="key rejected">Rejected — red</span>
+        <span class="key interview">Interview — green</span>
+        <span class="key accepted">Accepted — confetti</span>
+      </section>
+
+      <div class="sheet-wrap">
+        <table class="sheet">
+          <thead>
+            <tr>
+              <th class="position">Position</th>
+              <th>Company</th>
+              <th>Location</th>
+              <th>Date</th>
+              <th>Posted</th>
+              <th>Term</th>
+              <th>Notes</th>
+              <th>Status</th>
+              <th class="row-action"><span class="sr">Remove</span></th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <p id="live" class="sr" aria-live="polite"></p>
+    </main>
+    <script src="applications.js"></script>
+    <script src="scan.js"></script>
+    <script src="confetti.js"></script>
+    <script src="tracker.js"></script>
+  </body>
+</html>

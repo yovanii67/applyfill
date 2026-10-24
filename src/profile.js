@@ -6,14 +6,14 @@
     intern: "Internship basics",
     links: "Links",
     work: "Work authorization",
-    tesla: "Tesla Easy Apply",
+    eeo: "EEO (optional)",
     agreements: "Terms & agreements",
     answers: "Saved answers",
   };
 
   const SECTION_NOTES = {
     intern: "These answers are reused on Greenhouse, Handshake, Lever, Workday, and ordinary intern forms. “End date month/year” and Location use Graduation month/year and Street address. Workday “Given Name(s)” and “Address Line 1” use First name and Street address.",
-    tesla: "Tesla-only questions. Dropdowns should match Tesla’s wording (for example “7 months or more”). Calendar dates are skipped.",
+    eeo: "Optional self-identification. Copy the wording from the form you are filling. ApplyFill does not submit these for you.",
     agreements: "Set to Yes only after you have read those documents. ApplyFill will not submit the application for you.",
   };
 
@@ -26,6 +26,7 @@
     { key: "pronouns", label: "Pronouns", section: "identity", placeholder: "they/them" },
     { key: "email", label: "Email", section: "contact", type: "email", placeholder: "you@school.edu" },
     { key: "phone", label: "Phone", section: "contact", type: "tel", placeholder: "(555) 010-1234" },
+    { key: "smsConsent", label: "Consent to application text messages?", section: "contact", placeholder: "Yes" },
     { key: "street", label: "Street address / location", section: "contact", placeholder: "123 Campus Ave" },
     { key: "city", label: "City", section: "contact", placeholder: "Your city" },
     { key: "state", label: "State / region", section: "contact", placeholder: "CA" },
@@ -51,6 +52,9 @@
     { key: "noticePeriod", label: "Availability / notice period", section: "intern", placeholder: "More than 12 weeks" },
     { key: "phoneType", label: "Contact phone type", section: "intern", placeholder: "Mobile" },
     { key: "previouslyApplied", label: "Applied to this company before?", section: "intern", placeholder: "No" },
+    { key: "teslaOtherJobs", label: "Consider me for other openings?", section: "intern", placeholder: "Yes" },
+    { key: "teslaPreviouslyEmployed", label: "Previously employed here?", section: "intern", placeholder: "No" },
+    { key: "teslaFormerIntern", label: "Former/current intern or contractor?", section: "intern", placeholder: "No" },
     { key: "languages", label: "Languages", section: "intern", placeholder: "English" },
     { key: "linkedin", label: "LinkedIn URL", section: "links", type: "url", placeholder: "https://linkedin.com/in/you" },
     { key: "github", label: "GitHub URL", section: "links", type: "url", placeholder: "https://github.com/you" },
@@ -61,16 +65,12 @@
     { key: "startDate", label: "Earliest start date", section: "work", placeholder: "June 2027" },
     { key: "desiredRole", label: "Desired role / title", section: "work", placeholder: "Engineering Intern" },
     { key: "locationPref", label: "Preferred location", section: "work", placeholder: "Your city, ST" },
-    { key: "teslaOtherJobs", label: "Consider me for other Tesla jobs (36 months)?", section: "tesla", placeholder: "Yes" },
-    { key: "teslaPreviouslyEmployed", label: "Previously employed by Tesla?", section: "tesla", placeholder: "No" },
-    { key: "teslaFormerIntern", label: "Former/current intern or contractor?", section: "tesla", placeholder: "No" },
-    { key: "smsConsent", label: "Consent to application text messages?", section: "tesla", placeholder: "Yes" },
-    { key: "eeoAcknowledge", label: "Acknowledge Tesla EEO statement?", section: "tesla", placeholder: "Yes" },
-    { key: "gender", label: "Gender (EEO, optional)", section: "tesla", placeholder: "Copy the form option" },
-    { key: "veteranStatus", label: "Veteran status (EEO, optional)", section: "tesla", placeholder: "Copy the form option" },
-    { key: "raceEthnicity", label: "Race / ethnicity (EEO, optional)", section: "tesla", placeholder: "Copy the form option" },
-    { key: "disability", label: "Disability (EEO, optional)", section: "tesla", placeholder: "Copy the form option" },
-    { key: "teslaTerms", label: "Accept Tesla terms / conditions of employment?", section: "agreements", placeholder: "Yes" },
+    { key: "eeoAcknowledge", label: "Acknowledge EEO statement?", section: "eeo", placeholder: "Yes" },
+    { key: "gender", label: "Gender (EEO, optional)", section: "eeo", placeholder: "Copy the form option" },
+    { key: "veteranStatus", label: "Veteran status (EEO, optional)", section: "eeo", placeholder: "Copy the form option" },
+    { key: "raceEthnicity", label: "Race / ethnicity (EEO, optional)", section: "eeo", placeholder: "Copy the form option" },
+    { key: "disability", label: "Disability (EEO, optional)", section: "eeo", placeholder: "Copy the form option" },
+    { key: "teslaTerms", label: "Accept terms / conditions of employment?", section: "agreements", placeholder: "Yes" },
     { key: "agreeTerms", label: "Agree to generic terms / privacy boxes?", section: "agreements", placeholder: "Yes" },
     { key: "howHeard", label: "How did you hear about us?", section: "answers", placeholder: "University career portal" },
     { key: "referralName", label: "Referral name (if asked)", section: "answers", placeholder: "" },
@@ -148,5 +148,9 @@
     return { filled, total: FIELDS.length };
   }
 
-  root.ApplyFillProfile = { SECTIONS, SECTION_NOTES, FIELDS, DEFAULTS, DEFAULT_SETTINGS, derive, completeness };
+  function sectionLabel(sectionKey) {
+    return SECTIONS[sectionKey] || sectionKey || "Application";
+  }
+
+  root.ApplyFillProfile = { SECTIONS, SECTION_NOTES, FIELDS, DEFAULTS, DEFAULT_SETTINGS, derive, completeness, sectionLabel };
 })(typeof globalThis !== "undefined" ? globalThis : window);

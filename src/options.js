@@ -1,5 +1,7 @@
 const form = document.getElementById("profile");
 const toast = document.getElementById("toast");
+const complete = document.getElementById("complete");
+const completeBar = document.getElementById("completeBar");
 
 const grouped = new Map();
 for (const field of ApplyFillProfile.FIELDS) {
@@ -8,15 +10,17 @@ for (const field of ApplyFillProfile.FIELDS) {
 }
 
 for (const [section, fields] of grouped) {
+  const card = document.createElement("section");
+  card.className = "card";
   const heading = document.createElement("h2");
   heading.textContent = ApplyFillProfile.SECTIONS[section] || section;
-  form.appendChild(heading);
+  card.appendChild(heading);
   const note = ApplyFillProfile.SECTION_NOTES?.[section];
   if (note) {
     const hint = document.createElement("p");
     hint.className = "section-note";
     hint.textContent = note;
-    form.appendChild(hint);
+    card.appendChild(hint);
   }
   const grid = document.createElement("div");
   grid.className = "grid";
@@ -32,7 +36,14 @@ for (const [section, fields] of grouped) {
     label.appendChild(input);
     grid.appendChild(label);
   }
-  form.appendChild(grid);
+  card.appendChild(grid);
+  form.appendChild(card);
+}
+
+function renderCompleteness(profile) {
+  const { filled, total } = ApplyFillProfile.completeness(profile || {});
+  if (complete) complete.textContent = `${filled} / ${total}`;
+  if (completeBar) completeBar.style.width = total ? `${Math.round((filled / total) * 100)}%` : "0%";
 }
 
 async function load() {
@@ -45,6 +56,7 @@ async function load() {
   document.getElementById("skipFilled").checked = next.skipFilled !== false;
   document.getElementById("showFab").checked = next.showFab !== false;
   document.getElementById("autoFillAts").checked = Boolean(next.autoFillAts);
+  renderCompleteness(merged);
 }
 
 document.getElementById("save").addEventListener("click", async () => {
@@ -60,6 +72,7 @@ document.getElementById("save").addEventListener("click", async () => {
   for (const input of form.elements) {
     if (input.name) input.value = profile[input.name] || "";
   }
+  renderCompleteness(profile);
   toast.hidden = false;
   setTimeout(() => { toast.hidden = true; }, 1600);
 });

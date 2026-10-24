@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "ApplyFill",
-  "version": "1.3.2",
-  "description": "Fills internship and job applications from your saved profile, then shows what went into each field.",
+  "version": "1.5.0",
+  "description": "Fills internship applications from your saved profile and keeps a private tracker of positions you scan.",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
@@ -30,6 +30,13 @@
         "default": "Alt+Shift+F"
       },
       "description": "Fill the current application form"
+    },
+    "scan-posting": {
+      "suggested_key": {
+        "default": "Alt+Shift+D",
+        "mac": "Alt+Shift+D"
+      },
+      "description": "Scan this posting into the internship tracker"
     }
   },
   "content_scripts": [
@@ -42,7 +49,7 @@
     },
     {
       "matches": ["http://*/*", "https://*/*"],
-      "js": ["src/profile.js", "src/matcher.js", "src/fill.js", "src/content.js"],
+      "js": ["src/profile.js", "src/matcher.js", "src/fill.js", "src/applications.js", "src/scan.js", "src/confetti.js", "src/content.js"],
       "run_at": "document_idle",
       "all_frames": true
     }

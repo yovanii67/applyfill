@@ -332,7 +332,6 @@
       if (heading?.innerText.trim()) return heading.innerText.trim().slice(0, 48);
       node = node.parentElement;
     }
-    if (/tesla\.com/i.test(typeof location !== "undefined" ? location.href : "")) return "Tesla";
     return "Application";
   }
 

@@ -1,3 +1,13 @@
+const PAGE_FILES = [
+  "src/profile.js",
+  "src/matcher.js",
+  "src/fill.js",
+  "src/applications.js",
+  "src/scan.js",
+  "src/confetti.js",
+  "src/content.js",
+];
+
 const KNOWN = [
   "tesla.com",
   "greenhouse.io", "lever.co", "myworkdayjobs.com", "workday.com", "ashbyhq.com",
@@ -37,7 +47,7 @@ async function fillActiveTab() {
     try {
       await chrome.scripting.executeScript({
         target: { tabId: tab.id, allFrames: true },
-        files: ["src/profile.js", "src/matcher.js", "src/fill.js", "src/content.js"],
+        files: PAGE_FILES,
       });
       const retryFrames = await chrome.webNavigation.getAllFrames({ tabId: tab.id }).catch(() => [{ frameId: 0 }]);
       const retryOrdered = [...(retryFrames || [{ frameId: 0 }])].sort((a, b) => (a.frameId === 0 ? -1 : b.frameId === 0 ? 1 : 0));
@@ -55,6 +65,43 @@ async function fillActiveTab() {
     // Top frame HUD is best-effort.
   }
   return payload;
+}
+
+async function scanActiveTab() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id) return { error: "No active tab." };
+  const url = tab.url || "";
+  const ownPage = url.startsWith(`chrome-extension://${chrome.runtime.id}`);
+  if (!/^https?:/.test(url) && !ownPage) {
+    return { error: "Open a job posting first (http/https)." };
+  }
+
+  async function ask() {
+    try {
+      return await chrome.tabs.sendMessage(tab.id, { type: "SCAN" }, { frameId: 0 });
+    } catch {
+      return null;
+    }
+  }
+
+  let response = await ask();
+  if (!response) {
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: PAGE_FILES,
+      });
+      response = await ask();
+    } catch (error) {
+      return { error: error.message || "Could not reach this page." };
+    }
+  }
+  if (!response?.ok) return { error: response?.error || "Could not scan this page." };
+  return response;
+}
+
+function openTracker() {
+  return chrome.tabs.create({ url: chrome.runtime.getURL("src/tracker.html") });
 }
 
 let debuggerTab = null;
@@ -165,6 +212,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     fillActiveTab().then(sendResponse);
     return true;
   }
+  if (message.type === "SCAN_ACTIVE_TAB") {
+    scanActiveTab().then(sendResponse);
+    return true;
+  }
+  if (message.type === "OPEN_TRACKER") {
+    openTracker().then(() => sendResponse({ ok: true }));
+    return true;
+  }
   if (message.type === "DEBUGGER_ATTACH") {
     debuggerAttach(sender.tab?.id).then((ok) => sendResponse({ ok }));
     return true;
@@ -181,6 +236,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 chrome.commands.onCommand.addListener((command) => {
   if (command === "fill-page") fillActiveTab();
+  if (command === "scan-posting") scanActiveTab();
 });
 
 chrome.runtime.onInstalled.addListener(() => {

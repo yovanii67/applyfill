@@ -639,6 +639,13 @@
     return true;
   }
 
+  function displaySection(pageSection, fieldMeta) {
+    const raw = String(pageSection || "").trim();
+    if (raw && !/^tesla(\b| easy apply|$)/i.test(raw)) return raw;
+    const key = fieldMeta?.section;
+    return root.ApplyFillProfile?.sectionLabel?.(key) || root.ApplyFillProfile?.SECTIONS?.[key] || key || "Application";
+  }
+
   const MULTI_FILL_KEYS = new Set([
     "street", "city", "state", "zip", "country",
     "firstName", "lastName", "middleName",
@@ -680,7 +687,7 @@
       key: match.key,
       label: fieldMeta?.label || match.key,
       value,
-      section: match.section || fieldMeta?.section || "Application",
+      section: displaySection(match.section, fieldMeta),
       via: match.via,
     };
   }
