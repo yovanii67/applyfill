@@ -1,0 +1,241 @@
+const rowsEl = document.getElementById("rows");
+const countEl = document.getElementById("count");
+const toast = document.getElementById("toast");
+const live = document.getElementById("live");
+const addBtn = document.getElementById("add");
+
+let apps = [];
+let saveTimer = 0;
+let suppress = false;
+let toastTimer = 0;
+
+function flashSaved(text) {
+  if (!toast) return;
+  toast.hidden = false;
+  toast.textContent = text || "Saved on this device.";
+  window.clearTimeout(toastTimer);
+  toastTimer = window.setTimeout(() => { toast.hidden = true; }, 1600);
+}
+
+function scheduleSave() {
+  window.clearTimeout(saveTimer);
+  saveTimer = window.setTimeout(() => persist(), 250);
+}
+
+async function persist() {
+  suppress = true;
+  try {
+    await chrome.storage.local.set({ applications: apps });
+    flashSaved();
+  } finally {
+    window.setTimeout(() => { suppress = false; }, 80);
+  }
+}
+
+function textCell(row, key, label, className) {
+  const input = document.createElement("input");
+  input.className = `cell ${className || ""}`.trim();
+  input.type = key === "date" || key === "posted" ? "date" : "text";
+  input.setAttribute("aria-label", label);
+  input.value = row[key] || "";
+  input.autocomplete = "off";
+  input.addEventListener("input", () => {
+    row[key] = input.value;
+    scheduleSave();
+  });
+  return input;
+}
+
+function positionCell(row) {
+  const cell = document.createElement("td");
+  cell.className = "position";
+  const title = textCell(row, "title", "Position name", "title");
+  title.placeholder = "Position name";
+
+  const linkRow = document.createElement("div");
+  linkRow.className = "pos-links";
+  const link = document.createElement("a");
+  link.className = "pos-link";
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+
+  const url = textCell(row, "url", "Posting link", "url");
+  url.placeholder = "https://";
+  url.addEventListener("input", paint);
+  url.addEventListener("blur", () => {
+    const href = ApplyFillApplications.canonicalUrl(row.url);
+    if (href && href !== row.url) {
+      row.url = href;
+      url.value = href;
+      scheduleSave();
+    }
+    cell.classList.remove("url-editing");
+    paint();
+  });
+
+  const edit = document.createElement("button");
+  edit.type = "button";
+  edit.className = "edit-link";
+  edit.textContent = "Edit link";
+  edit.addEventListener("click", () => {
+    cell.classList.add("url-editing");
+    paint();
+    url.focus();
+  });
+
+  function paint() {
+    const href = ApplyFillApplications.canonicalUrl(row.url);
+    const editing = cell.classList.contains("url-editing");
+    const showLink = Boolean(href) && !editing;
+    linkRow.hidden = !showLink;
+    url.hidden = showLink;
+    if (href) {
+      link.href = href;
+      link.textContent = href;
+      link.title = href;
+    } else {
+      link.removeAttribute("href");
+      link.textContent = "";
+      link.title = "";
+    }
+  }
+
+  paint();
+  linkRow.append(link, edit);
+  cell.append(title, linkRow, url);
+  return cell;
+}
+
+function statusCell(row) {
+  const td = document.createElement("td");
+  const select = document.createElement("select");
+  select.className = "status";
+  select.setAttribute("aria-label", `Status for ${row.title || "this internship"}`);
+  for (const item of ApplyFillApplications.STATUSES) {
+    const option = document.createElement("option");
+    option.value = item.id;
+    option.textContent = item.label;
+    select.append(option);
+  }
+  select.value = row.status;
+  select.dataset.status = row.status;
+  select.addEventListener("change", () => {
+    const previous = row.status;
+    row.status = select.value;
+    select.dataset.status = select.value;
+    if (row.status === "accepted" && previous !== "accepted") {
+      const played = ApplyFillConfetti.burst(document);
+      const name = row.title || "This internship";
+      if (live) live.textContent = `${name} marked accepted.`;
+      if (!played) flashSaved("Marked accepted.");
+    }
+    scheduleSave();
+  });
+  td.append(select);
+  return td;
+}
+
+function removeCell(row) {
+  const td = document.createElement("td");
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "remove";
+  button.textContent = "Delete";
+  button.addEventListener("click", () => {
+    if (button.dataset.armed !== "1") {
+      button.dataset.armed = "1";
+      button.textContent = "Remove?";
+      window.setTimeout(() => {
+        if (button.dataset.armed === "1") {
+          button.dataset.armed = "";
+          button.textContent = "Delete";
+        }
+      }, 2200);
+      return;
+    }
+    apps = apps.filter((item) => item.id !== row.id);
+    render();
+    persist();
+  });
+  td.append(button);
+  return td;
+}
+
+function render() {
+  if (countEl) countEl.textContent = String(apps.length);
+  rowsEl.replaceChildren();
+  if (!apps.length) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 9;
+    td.className = "empty";
+    td.append("No internships yet. Open a posting and press Alt + Shift + D, or ");
+    const sample = document.createElement("a");
+    sample.href = "../demo/posting.html";
+    sample.target = "_blank";
+    sample.rel = "noopener noreferrer";
+    sample.textContent = "try the sample posting";
+    td.append(sample, ".");
+    tr.append(td);
+    rowsEl.append(tr);
+    return;
+  }
+
+  for (const row of apps) {
+    const tr = document.createElement("tr");
+    tr.dataset.id = row.id;
+    tr.append(positionCell(row));
+    const company = document.createElement("td");
+    company.append(textCell(row, "company", "Company"));
+    const location = document.createElement("td");
+    location.append(textCell(row, "location", "Location"));
+    const date = document.createElement("td");
+    date.append(textCell(row, "date", "Date", "date"));
+    const posted = document.createElement("td");
+    posted.append(textCell(row, "posted", "Posted date", "date"));
+    const term = document.createElement("td");
+    term.append(textCell(row, "term", "Term"));
+    const notes = document.createElement("td");
+    notes.append(textCell(row, "notes", "Notes", "notes"));
+    tr.append(company, location, date, posted, term, notes, statusCell(row), removeCell(row));
+    rowsEl.append(tr);
+  }
+}
+
+function addRow() {
+  const row = ApplyFillApplications.create({
+    date: ApplyFillScan.todayISO(new Date()),
+    status: "applied",
+  });
+  apps.unshift(row);
+  render();
+  document.querySelector("input.title")?.focus();
+  persist();
+}
+
+async function load() {
+  if (!globalThis.chrome?.storage?.local) {
+    rowsEl.replaceChildren();
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 9;
+    td.className = "empty";
+    td.textContent = "Open this tracker from the ApplyFill popup so it can use this browser’s saved list.";
+    tr.append(td);
+    rowsEl.append(tr);
+    if (addBtn) addBtn.disabled = true;
+    return;
+  }
+  const stored = await chrome.storage.local.get("applications");
+  apps = ApplyFillApplications.normalize(stored.applications);
+  render();
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== "local" || !changes.applications || suppress) return;
+    if (document.activeElement?.closest?.(".sheet")) return;
+    apps = ApplyFillApplications.normalize(changes.applications.newValue);
+    render();
+  });
+}
+
+addBtn?.addEventListener("click", addRow);
+load();

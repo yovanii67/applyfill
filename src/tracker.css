@@ -1,0 +1,332 @@
+:root {
+  --canvas: #f7f4ef;
+  --canvas-2: #f3ebe3;
+  --card: rgba(255, 253, 249, 0.9);
+  --ink: #2a241c;
+  --muted: #8a8176;
+  --line: rgba(40, 32, 24, 0.08);
+  --accent: #e8a054;
+  --accent-deep: #d4893a;
+  --charcoal: #2b2722;
+  --face: #3a2c18;
+  --shadow: 0 18px 40px rgba(70, 50, 30, 0.08);
+  --rejected: #fde2e0;
+  --rejected-ink: #8d221c;
+  --interview: #d9f3e3;
+  --interview-ink: #14663a;
+  --font: "Segoe UI", "Liberation Sans", system-ui, sans-serif;
+}
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(1200px 520px at 80% -10%, #f6d9b8 0%, transparent 55%),
+    linear-gradient(180deg, var(--canvas) 0%, var(--canvas-2) 100%);
+  color: var(--ink);
+  font: 15px/1.45 var(--font);
+}
+
+main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 36px 20px 80px;
+}
+
+.hero-card,
+.legend,
+.sheet-wrap {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+}
+
+.hero-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 22px;
+  padding: 24px;
+  margin-bottom: 14px;
+}
+
+.hero-copy { display: flex; gap: 16px; align-items: flex-start; }
+
+.kicker {
+  margin: 0;
+  color: var(--accent-deep);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+h1 {
+  margin: 4px 0 8px;
+  font-size: 32px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+
+.lede { margin: 0; color: var(--muted); max-width: 62ch; }
+.lede strong { color: var(--ink); font-weight: 700; }
+
+.page-links { margin: 10px 0 0; font-size: 14px; }
+.page-links a { color: var(--accent-deep); text-decoration: none; font-weight: 650; }
+
+.hero-side {
+  display: grid;
+  align-content: start;
+  justify-items: end;
+  gap: 10px;
+  min-width: 180px;
+}
+
+.progress-meta {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.progress-meta strong { color: var(--ink); font-size: 28px; font-weight: 650; }
+
+#add, .linkish {
+  border: 0;
+  background: var(--charcoal);
+  color: #fffdf9;
+  font: inherit;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+#add:hover { background: #1f1b17; }
+
+.toast { margin: 0; color: var(--accent-deep); font-size: 13px; }
+
+.face {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #f0c27a, var(--accent));
+  position: relative;
+  flex: none;
+  box-shadow: 0 8px 18px rgba(232, 160, 84, 0.28);
+}
+
+.antenna {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  width: 3px;
+  height: 9px;
+  background: var(--accent);
+  transform: translateX(-50%);
+}
+
+.antenna::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: -3px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ffe7c2;
+}
+
+.eye {
+  position: absolute;
+  top: 16px;
+  width: 7px;
+  height: 9px;
+  background: var(--face);
+  border-radius: 3px;
+}
+
+.eye.left { left: 11px; }
+.eye.right { right: 11px; }
+
+.mouth {
+  position: absolute;
+  left: 50%;
+  bottom: 11px;
+  width: 16px;
+  height: 7px;
+  border: 2px solid var(--face);
+  border-top: 0;
+  border-radius: 0 0 10px 10px;
+  transform: translateX(-50%);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+}
+
+.key {
+  font-size: 13px;
+  color: var(--ink);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid var(--line);
+}
+
+.key.rejected { background: var(--rejected); color: var(--rejected-ink); border-color: transparent; }
+.key.interview { background: var(--interview); color: var(--interview-ink); border-color: transparent; }
+.key.accepted { background: #fff; }
+
+.sheet-wrap { overflow: auto; }
+
+.sheet {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 980px;
+}
+
+.sheet th {
+  text-align: left;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 650;
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 253, 249, 0.96);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.sheet td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.sheet tr:last-child td { border-bottom: 0; }
+
+.position {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 240px;
+  background: #fffdf9;
+  box-shadow: 8px 0 12px rgba(70, 50, 30, 0.03);
+}
+
+.sheet th.position { z-index: 3; }
+
+.cell, .status {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 8px 8px;
+  font: inherit;
+}
+
+.cell:hover, .status:hover { border-color: var(--line); }
+
+.cell:focus, .status:focus {
+  outline: 2px solid rgba(232, 160, 84, 0.35);
+  border-color: rgba(232, 160, 84, 0.55);
+  background: #fff;
+}
+
+.cell.title { font-weight: 650; }
+
+.pos-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 8px 0;
+  min-height: 16px;
+}
+
+.pos-links:empty, .pos-links:has(a[hidden]):has(button[hidden]) { display: none; }
+
+.pos-link {
+  display: block;
+  color: var(--accent-deep);
+  font-size: 12px;
+  line-height: 1.35;
+  max-width: 230px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cell.url { font-size: 12px; color: var(--accent-deep); }
+
+.edit-link {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.status { cursor: pointer; font-weight: 650; }
+.status[data-status="applied"],
+.status[data-status="accepted"] { background: transparent; color: var(--ink); }
+.status[data-status="rejected"] { background: var(--rejected); color: var(--rejected-ink); }
+.status[data-status="interview"] { background: var(--interview); color: var(--interview-ink); }
+.status option[value="rejected"] { background: var(--rejected); color: var(--rejected-ink); }
+.status option[value="interview"] { background: var(--interview); color: var(--interview-ink); }
+.status option[value="applied"],
+.status option[value="accepted"] { background: #fff; color: var(--ink); }
+
+.notes { min-width: 160px; }
+.date { min-width: 132px; }
+
+.remove {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 999px;
+  padding: 6px 8px;
+}
+
+.remove[data-armed="1"] { background: var(--rejected); color: var(--rejected-ink); }
+
+.empty {
+  padding: 28px 16px;
+  color: var(--muted);
+}
+
+.empty a { color: var(--accent-deep); }
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+@media (max-width: 800px) {
+  .hero-card { flex-direction: column; }
+  .hero-side { justify-items: start; }
+  h1 { font-size: 28px; }
+}

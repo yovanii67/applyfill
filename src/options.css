@@ -73,6 +73,9 @@ h1 {
   max-width: 58ch;
 }
 
+.page-links { margin: 12px 0 0; }
+.page-links a { color: var(--accent-deep); font-weight: 650; text-decoration: none; }
+
 .face {
   width: 52px;
   height: 52px;

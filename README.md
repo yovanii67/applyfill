@@ -8,7 +8,7 @@ The same profile fills common intern questions on Greenhouse, Handshake, Lever, 
 
 ## Privacy (read this first)
 
-- Your name, email, phone, and school are stored only in **your browser** (`chrome.storage.local`). They are never sent to a server.
+- Your name, email, phone, school, and tracked internships are stored only in **your browser** (`chrome.storage.local`). They are never sent to a server.
 - This GitHub repo does **not** contain anyone’s real profile. Placeholders and practice forms use fake example data.
 - **Do not** paste your real resume, passwords, or Social Security number into the profile.
 - **Do not** copy a friend’s filled-in Chrome profile. Clone this repo, load the extension yourself, then type **your** answers in **Edit profile**.
@@ -73,9 +73,31 @@ Grey hint text is only an example. Type your real answers.
 
 Multi-step forms: run Fill again on each new page.
 
+## Track internships
+
+The tracker is a separate page from profile fill. Positions stay on this computer only.
+
+1. Open the internship posting.
+2. Press **Alt + Shift + D**, or click **Scan this posting** in the popup.
+3. The bot reads the position name, company, location, dates, term, and the page link.
+4. Check the card. Change anything that looks wrong, and pick a status if you want.
+5. Click **Save to tracker**. Nothing is stored if you click **Don't save**.
+6. Open **Tracker** from the popup. Each internship is a row. The page link sits under the position name. Edit any cell, add a row, or remove one.
+
+Status menu:
+
+- **Applied** — no color. This is the default when you save.
+- **Rejected** — red.
+- **Interview** — green.
+- **Accepted** — confetti. The menu stays uncolored after the burst.
+
+If Chrome did not reserve the shortcut, open `chrome://extensions/shortcuts` and set **Scan this posting into the internship tracker** to Alt + Shift + D.
+
+A sample posting is `demo/posting.html`. The practice application form is still `demo/application.html`.
+
 ## Practice first (optional)
 
-From the extension popup, open **Practice form** — generic intern blanks (Greenhouse-style), including other-openings, previous employment, SMS, EEO, and terms questions.
+From the extension popup, open **Practice form** — generic intern blanks (Greenhouse-style), including other-openings, previous employment, SMS, EEO, and terms questions. **Tracker** opens the internship spreadsheet. The sample posting is linked from an empty tracker.
 
 Practice pages use fake sample data unless you already saved a profile.
 

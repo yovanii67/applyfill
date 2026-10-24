@@ -1,4 +1,5 @@
 const fillBtn = document.getElementById("fill");
+const scanBtn = document.getElementById("scan");
 const status = document.getElementById("status");
 const complete = document.getElementById("complete");
 const completeBar = document.getElementById("completeBar");
@@ -45,5 +46,18 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 }
+
+scanBtn.addEventListener("click", async () => {
+  scanBtn.disabled = true;
+  status.textContent = "Reading this posting…";
+  const response = await chrome.runtime.sendMessage({ type: "SCAN_ACTIVE_TAB" });
+  scanBtn.disabled = false;
+  if (!response || response.error) {
+    status.textContent = response?.error || "Could not scan this page.";
+    return;
+  }
+  const name = response.title || response.company || "this posting";
+  status.textContent = `Check “${name}” on the page, then agree to save it in the tracker.`;
+});
 
 refreshCompleteness();
