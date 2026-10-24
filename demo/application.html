@@ -28,11 +28,11 @@
       }
       .toolbar { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 18px; }
       .note { color: #66736e; font-size: 13px; }
-      [data-applyfill] { outline: 2px solid #2ee6a6; outline-offset: 2px; }
-      .hud { margin-top: 16px; background: #10181d; color: #e8f4ee; border-radius: 14px; padding: 14px; display: none; }
+      [data-applyfill] { outline: 2px solid #e8a054; outline-offset: 2px; }
+      .hud { margin-top: 16px; background: rgba(255, 253, 249, 0.92); color: #2a241c; border-radius: 14px; padding: 14px; display: none; border: 1px solid rgba(40, 32, 24, 0.08); box-shadow: 0 18px 40px rgba(70, 50, 30, 0.08); }
       .hud.show { display: block; }
-      .hud h3 { margin: 0 0 8px; color: #2ee6a6; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
-      .hud div { display: grid; grid-template-columns: 140px 1fr 1fr; gap: 8px; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #1e2a30; }
+      .hud h3 { margin: 0 0 8px; color: #d4893a; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+      .hud div { display: grid; grid-template-columns: 140px 1fr 1fr; gap: 8px; font-size: 13px; padding: 6px 0; border-bottom: 1px solid rgba(40, 32, 24, 0.08); }
       @media (max-width: 700px) { .row { grid-template-columns: 1fr; } main { margin: 12px; } }
     </style>
   </head>
@@ -213,6 +213,68 @@
             </select>
           </label>
         </fieldset>
+
+        <fieldset>
+          <legend>I authorize this company to consider me for other job opportunities for the next 36 months in addition to the specific job I am applying for.</legend>
+          <label>
+            <select name="other_jobs">
+              <option value="">Select</option>
+              <option>Yes</option>
+              <option>No</option>
+            </select>
+          </label>
+        </fieldset>
+        <fieldset>
+          <legend>Have you previously been employed by this company?</legend>
+          <label>
+            <select name="prev_employed">
+              <option value="">Select</option>
+              <option>Yes</option>
+              <option>No</option>
+            </select>
+          </label>
+        </fieldset>
+        <fieldset>
+          <legend>Are you a former/current intern or contractor?</legend>
+          <label>
+            <select name="former_intern">
+              <option value="">Select</option>
+              <option>Yes</option>
+              <option>No</option>
+            </select>
+          </label>
+        </fieldset>
+        <fieldset>
+          <legend>Do you consent to receiving text messages throughout your application process?</legend>
+          <label>
+            <select name="sms">
+              <option value="">Select</option>
+              <option>Yes</option>
+              <option>No</option>
+            </select>
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>I acknowledge that I have read and understood the Equal Employee Opportunities statement.</legend>
+          <label><input type="checkbox" name="eeo_ack" /></label>
+        </fieldset>
+        <fieldset>
+          <legend>EEO (optional)</legend>
+          <label>Gender
+            <select name="gender">
+              <option value="">Select</option>
+              <option>Decline to self-identify</option>
+              <option>Male</option>
+              <option>Female</option>
+            </select>
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>I have read and understand the statements above and accept them as conditions of employment.</legend>
+          <label><input type="checkbox" name="employment_terms" /></label>
+        </fieldset>
       </form>
 
       <div class="hud" id="hud">
@@ -279,6 +341,13 @@
           sponsorship: "No",
           startDate: "June 2027",
           howHeard: "University career portal",
+          teslaOtherJobs: "Yes",
+          teslaPreviouslyEmployed: "No",
+          teslaFormerIntern: "No",
+          smsConsent: "Yes",
+          eeoAcknowledge: "Yes",
+          gender: "Decline to self-identify",
+          teslaTerms: "Yes",
         };
         const saved = stored.profile || {};
         const hasSaved = Object.values(saved).some((value) => String(value || "").trim());

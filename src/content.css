@@ -1,6 +1,6 @@
 :host {
   all: initial;
-  font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+  font-family: "Segoe UI", "Liberation Sans", system-ui, sans-serif;
 }
 
 .af-shell {
@@ -20,8 +20,8 @@
   height: 40px;
   border: 0;
   border-radius: 14px;
-  background: #152229;
-  box-shadow: 0 8px 20px rgba(8, 16, 20, 0.32), inset 0 0 0 1px rgba(90, 230, 180, 0.35);
+  background: rgba(255, 253, 249, 0.92);
+  box-shadow: 0 10px 24px rgba(70, 50, 30, 0.14), inset 0 0 0 1px rgba(40, 32, 24, 0.08);
   cursor: pointer;
   display: grid;
   place-items: center;
@@ -31,7 +31,7 @@
   width: 24px;
   height: 24px;
   border-radius: 8px;
-  background: linear-gradient(180deg, #2ee6a6, #19c48a);
+  background: linear-gradient(180deg, #f0c27a, #e8a054);
   position: relative;
   display: block;
 }
@@ -42,7 +42,7 @@
   left: 50%;
   width: 2px;
   height: 5px;
-  background: #2ee6a6;
+  background: #e8a054;
   transform: translateX(-50%);
   border-radius: 2px;
 }
@@ -55,7 +55,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #c6ffe8;
+  background: #ffe7c2;
 }
 
 .af-eye {
@@ -63,7 +63,7 @@
   top: 7px;
   width: 4px;
   height: 5px;
-  background: #102018;
+  background: #3a2c18;
   border-radius: 2px;
 }
 
@@ -76,7 +76,7 @@
   bottom: 5px;
   width: 8px;
   height: 4px;
-  border: 1.5px solid #102018;
+  border: 1.5px solid #3a2c18;
   border-top: 0;
   border-radius: 0 0 6px 6px;
   transform: translateX(-50%);
@@ -95,11 +95,12 @@
   width: 300px;
   max-height: 380px;
   overflow: hidden;
-  color: #e8f4ee;
-  background: #10181d;
-  border: 1px solid rgba(46, 230, 166, 0.25);
+  color: #2a241c;
+  background: rgba(255, 253, 249, 0.92);
+  border: 1px solid rgba(40, 32, 24, 0.08);
   border-radius: 18px;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 18px 40px rgba(70, 50, 30, 0.14);
+  backdrop-filter: blur(16px);
   transform-origin: top right;
   animation: af-pop 0.22s ease-out;
 }
@@ -114,7 +115,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 14px 14px 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(40, 32, 24, 0.06);
 }
 
 .af-kicker {
@@ -122,7 +123,7 @@
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #2ee6a6;
+  color: #d4893a;
 }
 
 .af-head h2 {
@@ -137,7 +138,7 @@
   border: 0;
   border-radius: 8px;
   background: transparent;
-  color: #9bb0a8;
+  color: #8a8176;
   font-size: 20px;
   cursor: pointer;
 }
@@ -153,7 +154,7 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #8fd9bb;
+  color: #8a8176;
 }
 
 .af-row {
@@ -161,13 +162,13 @@
   grid-template-columns: 1fr 1.2fr;
   gap: 8px;
   padding: 7px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(40, 32, 24, 0.06);
   font-size: 12px;
 }
 
-.af-label { color: #9bb0a8; }
-.af-value { color: #f4fff9; word-break: break-word; }
-.af-empty { color: #9bb0a8; font-size: 12px; line-height: 1.45; }
+.af-label { color: #8a8176; }
+.af-value { color: #2a241c; word-break: break-word; }
+.af-empty { color: #8a8176; font-size: 12px; line-height: 1.45; }
 
 @keyframes af-pop {
   from { opacity: 0; transform: translateY(8px) scale(0.96); }

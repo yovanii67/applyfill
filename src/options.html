@@ -2,28 +2,38 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>ApplyFill profile</title>
     <link rel="stylesheet" href="options.css" />
   </head>
   <body>
     <main>
-      <header>
-        <div class="face" aria-hidden="true">
-          <span class="antenna"></span>
-          <span class="eye left"></span>
-          <span class="eye right"></span>
-          <span class="mouth"></span>
+      <header class="hero-card">
+        <div class="hero-copy">
+          <div class="face" aria-hidden="true">
+            <span class="antenna"></span>
+            <span class="eye left"></span>
+            <span class="eye right"></span>
+            <span class="mouth"></span>
+          </div>
+          <div>
+            <p class="kicker">Your reusable answers</p>
+            <h1>Application profile</h1>
+            <p class="lede">Answers stay on this computer only. Fill in your own details — never copy someone else’s profile. ApplyFill never submits the application for you.</p>
+          </div>
         </div>
-        <div>
-          <p class="kicker">Your reusable answers</p>
-          <h1>Application profile</h1>
-          <p class="lede">Answers stay on this computer only. Fill in your own details — never copy someone else’s profile. ApplyFill never submits the application for you.</p>
+        <div class="progress-block">
+          <div class="progress-meta">
+            <span>Profile</span>
+            <strong id="complete">0 / 0</strong>
+          </div>
+          <div class="bar" aria-hidden="true"><i id="completeBar"></i></div>
         </div>
       </header>
 
       <form id="profile"></form>
 
-      <section class="settings">
+      <section class="card settings">
         <h2>Behavior</h2>
         <label class="check"><input id="skipFilled" type="checkbox" checked /> Skip fields that already have text</label>
         <label class="check"><input id="showFab" type="checkbox" checked /> Show the bot face on application pages</label>
@@ -32,7 +42,7 @@
 
       <div class="actions">
         <button id="save" type="button">Save profile</button>
-        <p id="toast" hidden>Saved.</p>
+        <p id="toast" hidden>Saved locally.</p>
       </div>
     </main>
     <script src="profile.js"></script>

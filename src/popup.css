@@ -1,12 +1,28 @@
-html, body {
-  margin: 0;
-  width: 320px;
-  background: #10181d;
-  color: #e8f4ee;
-  font: 13px/1.4 "Segoe UI", "Trebuchet MS", sans-serif;
+:root {
+  --canvas: #f7f4ef;
+  --card: rgba(255, 253, 249, 0.86);
+  --ink: #2a241c;
+  --muted: #8a8176;
+  --line: rgba(40, 32, 24, 0.08);
+  --accent: #e8a054;
+  --accent-deep: #d4893a;
+  --charcoal: #2b2722;
+  --face: #3a2c18;
+  --shadow: 0 10px 24px rgba(70, 50, 30, 0.08);
+  --font: "Segoe UI", "Liberation Sans", system-ui, sans-serif;
 }
 
-body { padding: 16px; }
+html, body {
+  margin: 0;
+  width: 340px;
+  color: var(--ink);
+  font: 13px/1.4 var(--font);
+  background:
+    radial-gradient(280px 160px at 100% 0%, #f6d9b8 0%, transparent 60%),
+    var(--canvas);
+}
+
+body { padding: 20px 16px 16px; }
 
 .hero {
   display: flex;
@@ -20,18 +36,19 @@ body { padding: 16px; }
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #2ee6a6;
+  color: var(--accent-deep);
 }
 
-h1 { margin: 2px 0 0; font-size: 20px; }
+h1 { margin: 2px 0 0; font-size: 20px; letter-spacing: -0.03em; }
 
 .face {
   width: 42px;
   height: 42px;
   border-radius: 14px;
-  background: linear-gradient(180deg, #2ee6a6, #19c48a);
+  background: linear-gradient(180deg, #f0c27a, var(--accent));
   position: relative;
   flex: none;
+  box-shadow: 0 6px 14px rgba(232, 160, 84, 0.28);
 }
 
 .antenna {
@@ -40,9 +57,10 @@ h1 { margin: 2px 0 0; font-size: 20px; }
   left: 50%;
   width: 3px;
   height: 8px;
-  background: #2ee6a6;
+  background: var(--accent);
   transform: translateX(-50%);
 }
+
 .antenna::after {
   content: "";
   position: absolute;
@@ -51,18 +69,20 @@ h1 { margin: 2px 0 0; font-size: 20px; }
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: #c6ffe8;
+  background: #ffe7c2;
 }
-.eye { position: absolute; top: 14px; width: 6px; height: 8px; background: #102018; border-radius: 3px; }
+
+.eye { position: absolute; top: 14px; width: 6px; height: 8px; background: var(--face); border-radius: 3px; }
 .eye.left { left: 9px; }
 .eye.right { right: 9px; }
+
 .mouth {
   position: absolute;
   left: 50%;
   bottom: 9px;
   width: 14px;
   height: 6px;
-  border: 2px solid #102018;
+  border: 2px solid var(--face);
   border-top: 0;
   border-radius: 0 0 8px 8px;
   transform: translateX(-50%);
@@ -71,10 +91,10 @@ h1 { margin: 2px 0 0; font-size: 20px; }
 #fill {
   width: 100%;
   border: 0;
-  border-radius: 12px;
+  border-radius: 999px;
   padding: 12px;
-  background: #2ee6a6;
-  color: #102018;
+  background: var(--charcoal);
+  color: #fffdf9;
   font-weight: 700;
   cursor: pointer;
 }
@@ -82,29 +102,63 @@ h1 { margin: 2px 0 0; font-size: 20px; }
 #fill:disabled { opacity: 0.6; cursor: wait; }
 
 .status {
-  color: #9bb0a8;
+  color: var(--muted);
   margin: 10px 0 0;
+}
+
+.progress-card,
+.meta div,
+.log {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+
+.progress-card {
+  margin-top: 14px;
+  padding: 10px 12px 12px;
+}
+
+.progress-meta {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.progress-meta strong { color: var(--ink); font-size: 14px; }
+
+.bar {
+  margin-top: 8px;
+  height: 5px;
+  border-radius: 99px;
+  background: rgba(40, 32, 24, 0.08);
+  overflow: hidden;
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f0c27a, var(--accent));
 }
 
 .meta {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin-top: 14px;
+  margin-top: 10px;
 }
 
-.meta div {
-  background: #182228;
-  border-radius: 10px;
-  padding: 8px 10px;
-}
-
-.meta span { display: block; color: #8aa397; font-size: 11px; }
+.meta div { padding: 8px 10px; }
+.meta span { display: block; color: var(--muted); font-size: 11px; }
 
 .log {
   list-style: none;
   margin: 12px 0 0;
-  padding: 0;
+  padding: 8px 12px;
   max-height: 180px;
   overflow: auto;
 }
@@ -113,12 +167,13 @@ h1 { margin: 2px 0 0; font-size: 20px; }
   display: grid;
   grid-template-columns: 0.9fr 1.1fr;
   gap: 8px;
-  padding: 6px 0;
-  border-bottom: 1px solid #1f2c32;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
   font-size: 12px;
 }
 
-.log small { color: #8aa397; }
+.log li:last-child { border-bottom: 0; }
+.log small { color: var(--muted); }
 
 footer {
   display: flex;
@@ -126,4 +181,4 @@ footer {
   margin-top: 14px;
 }
 
-a { color: #2ee6a6; text-decoration: none; }
+a { color: var(--accent-deep); text-decoration: none; }

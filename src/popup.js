@@ -1,6 +1,7 @@
 const fillBtn = document.getElementById("fill");
 const status = document.getElementById("status");
 const complete = document.getElementById("complete");
+const completeBar = document.getElementById("completeBar");
 const log = document.getElementById("log");
 
 async function refreshCompleteness() {
@@ -8,6 +9,7 @@ async function refreshCompleteness() {
   const fields = ["firstName", "lastName", "email", "phone", "school", "major", "linkedin", "github", "workAuth", "graduationDate"];
   const filled = fields.filter((key) => String(profile?.[key] || "").trim()).length;
   complete.textContent = `${filled} / ${fields.length} core`;
+  if (completeBar) completeBar.style.width = `${Math.round((filled / fields.length) * 100)}%`;
 }
 
 fillBtn.addEventListener("click", async () => {

@@ -138,7 +138,7 @@ function flashFields() {
   if (!document.getElementById("applyfill-page-style")) {
     const style = document.createElement("style");
     style.id = "applyfill-page-style";
-    style.textContent = "[data-applyfill]{outline:2px solid #2ee6a6 !important;outline-offset:2px;}";
+    style.textContent = "[data-applyfill]{outline:2px solid #e8a054 !important;outline-offset:2px;}";
     document.documentElement.appendChild(style);
   }
 }

@@ -22,14 +22,22 @@
     <button id="fill" type="button">Fill this page</button>
     <p id="status" class="status">Saves your name, email, school, and the rest — then types them into the blanks.</p>
 
-    <section class="meta">
-      <div>
+    <section class="progress-card">
+      <div class="progress-meta">
         <span>Profile</span>
         <strong id="complete">0 / 0</strong>
       </div>
+      <div class="bar" aria-hidden="true"><i id="completeBar"></i></div>
+    </section>
+
+    <section class="meta">
       <div>
         <span>Shortcut</span>
         <strong>Alt + Shift + F</strong>
+      </div>
+      <div>
+        <span>Storage</span>
+        <strong>This device only</strong>
       </div>
     </section>
 
@@ -38,7 +46,6 @@
     <footer>
       <a href="options.html" target="_blank">Edit profile</a>
       <a href="../demo/application.html" target="_blank">Practice form</a>
-      <a href="../demo/tesla.html" target="_blank">Tesla practice</a>
     </footer>
     <script src="popup.js"></script>
   </body>
