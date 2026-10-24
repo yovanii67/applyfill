@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ApplyFill",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Fills internship applications from your saved profile and keeps a private tracker of positions you scan.",
   "icons": {
     "16": "icons/icon16.png",
@@ -31,12 +31,12 @@
       },
       "description": "Fill the current application form"
     },
-    "scan-posting": {
+    "save-listing": {
       "suggested_key": {
-        "default": "Alt+Shift+D",
-        "mac": "Alt+Shift+D"
+        "default": "Alt+Shift+S",
+        "mac": "Alt+Shift+S"
       },
-      "description": "Scan this posting into the internship tracker"
+      "description": "Check this posting before saving it to the tracker"
     }
   },
   "content_scripts": [

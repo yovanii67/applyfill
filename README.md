@@ -78,11 +78,11 @@ Multi-step forms: run Fill again on each new page.
 The tracker is a separate page from profile fill. Positions stay on this computer only.
 
 1. Open the internship posting.
-2. Press **Alt + Shift + D**, or click **Scan this posting** in the popup.
+2. Press **Alt + Shift + S**, or click **Scan this posting** in the popup. You can also drag the robot to a spot you like; a click that does not drag opens **Fill this page** or **Spreadsheet**.
 3. The bot reads the position name, company, location, dates, term, and the page link.
 4. Check the card. Change anything that looks wrong, and pick a status if you want.
 5. Click **Save to tracker**. Nothing is stored if you click **Don't save**.
-6. Open **Tracker** from the popup. Each internship is a row. The page link sits under the position name. Edit any cell, add a row, or remove one.
+6. Open **Tracker** from the popup or the robot menu. Each internship is one row. Scanning that position again updates the same row after you confirm. The page link sits under the position name. Edit any cell, drag a column edge to reveal more text, add a row, or remove one.
 
 Status menu:
 
@@ -91,7 +91,7 @@ Status menu:
 - **Interview** — green.
 - **Accepted** — confetti. The menu stays uncolored after the burst.
 
-If Chrome did not reserve the shortcut, open `chrome://extensions/shortcuts` and set **Scan this posting into the internship tracker** to Alt + Shift + D.
+If a shortcut does nothing, open `chrome://extensions/shortcuts` and set **Fill the current application form** to Alt + Shift + F and **Check this posting before saving it to the tracker** to Alt + Shift + S. The same keys also work while the posting page is focused.
 
 A sample posting is `demo/posting.html`. The practice application form is still `demo/application.html`.
 

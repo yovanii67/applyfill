@@ -65,14 +65,15 @@
       "education end month", "endDateMonth",
     ],
     gradYear: [
-      "graduation year", "grad year", "year of graduation", "expected year",
-      "end date year", "end year", "expected graduation year", "graduation end year",
+      "anticipated graduation year", "expected graduation year", "graduation year",
+      "grad year", "year of graduation", "expected year",
+      "end date year", "end year", "graduation end year",
       "degree end year", "education end year", "endDateYear",
     ],
     graduationDate: [
-      "graduation date", "grad date", "expected graduation", "graduation",
-      "date of graduation", "anticipated graduation", "anticipated graduation date",
-      "expected grad", "when do you graduate", "education end date",
+      "anticipated graduation date", "anticipated graduation",
+      "graduation date", "grad date", "expected graduation date", "expected graduation",
+      "date of graduation", "expected grad", "when do you graduate", "education end date",
     ],
     linkedin: ["linkedin", "linked in", "linkedin url", "linkedin profile"],
     github: ["github", "git hub", "github url"],
@@ -358,8 +359,9 @@
     { key: "firstName", test: /\b(given name|given names|first name|legal first)\b/ },
     { key: "lastName", test: /\b(family name|family names|last name|legal last|surname)\b/ },
     { key: "middleName", test: /\b(middle name|middle initial)\b/ },
-    { key: "gradMonth", test: /\b(end date month|end-date-month|end month|graduation month|grad month|expected graduation month)\b/ },
-    { key: "gradYear", test: /\b(end date year|end-date-year|end year|graduation year|grad year|expected graduation year)\b/ },
+    { key: "gradMonth", test: /\b(end date month|end-date-month|end month|graduation month|grad month|expected graduation month|anticipated graduation month)\b/ },
+    { key: "gradYear", test: /\b(anticipated graduation year|expected graduation year|end date year|end-date-year|end year|graduation year|grad year|year of graduation)\b/ },
+    { key: "graduationDate", test: /\b(anticipated graduation date|anticipated graduation|expected graduation date|expected graduation|graduation date|date of graduation|when do you graduate)\b/ },
     { key: "street", test: /\b(address line 1|address line one|address 1|street address|current location|home location|your location)\b/ },
     { key: "email", test: /\b(e ?mail|email address)\b/ },
     { key: "phone", test: /\b(phone number|telephone|mobile number|cell phone)\b/ },
@@ -380,6 +382,20 @@
     { key: "phone", test: /phoneNumber|phone--phoneNumber/i },
   ];
 
+  function ownLabel(el) {
+    const id = el.id || "";
+    const labelNode = id ? document.querySelector(`label[for="${CSS.escape(id)}"]`) : null;
+    const wrapping = el.closest("label");
+    return normalize([
+      el.getAttribute("aria-label"),
+      el.getAttribute("placeholder"),
+      el.getAttribute("name"),
+      el.id,
+      labelNode ? labelNode.innerText : "",
+      wrapping ? wrapping.innerText : "",
+    ].join(" "));
+  }
+
   function hintFromLabel(haystack) {
     if (!haystack) return null;
     if (/\baddress line (2|two|3|three)\b/.test(haystack)) return null;
@@ -389,6 +405,7 @@
       if (hint.key === "street" && /\bemail\b/.test(haystack)) continue;
       if (hint.key === "fullName" && /\b(given|first|last|family)\b/.test(haystack)) continue;
       if (hint.key === "country" && /\b(birth|citizenship)\b/.test(haystack)) continue;
+      if (hint.key === "graduationDate" && /\b(graduation|grad)\s+year\b|\banticipated graduation year\b|\bexpected graduation year\b/.test(haystack)) continue;
       return hint.key;
     }
     if (/\baddress\b/.test(haystack) && !/\b(email|line 2|line two|country)\b/.test(haystack)) return "street";
@@ -487,7 +504,7 @@
       el.innerText, el.value, el.placeholder, el.getAttribute("aria-label"),
       el.closest("label")?.innerText, nearby, el.getAttribute("name"), el.id,
     ].join(" ").toLowerCase();
-    const monthYearField = /\b(end date month|end date year|end month|end year|graduation month|graduation year|grad month|grad year|expected graduation month|expected graduation year)\b/.test(own);
+    const monthYearField = /\b(end date month|end date year|end month|end year|graduation month|graduation year|grad month|grad year|expected graduation month|expected graduation year|anticipated graduation|expected graduation|graduation date|date of graduation)\b/.test(own);
     const chooser = el.tagName === "SELECT" || isChooser(el) || isSelectPlaceholder(el);
     if (monthYearField || (chooser && /\b(month|year)\b/.test(own))) return false;
     if (type === "date" || type === "datetime-local") return true;
@@ -520,6 +537,11 @@
 
     const autoKey = hintFromAutomation(el);
     if (autoKey) return { key: autoKey, via: "automation", section: sectionFor(el) };
+
+    const ownGrad = hintFromLabel(ownLabel(el));
+    if (ownGrad === "gradYear" || ownGrad === "gradMonth" || ownGrad === "graduationDate") {
+      return { key: ownGrad, via: "label", section: sectionFor(el) };
+    }
 
     const labelKey = hintFromLabel(haystack);
     if (labelKey) return { key: labelKey, via: "label", section: sectionFor(el) };
@@ -558,6 +580,8 @@
     let best = null;
     for (const [key, aliases] of Object.entries(ALIASES)) {
       if (key === "internStartDate") continue;
+      if (key === "graduationDate" && /\b(graduation|grad)\s+year\b|\banticipated graduation year\b/.test(haystack)) continue;
+      if (key === "gradYear" && /\bgraduation date\b|\banticipated graduation date\b/.test(haystack) && !/\byear\b/.test(haystack)) continue;
       if (key === "street" && /\baddress line (2|two|3|three)\b/.test(haystack)) continue;
       if (key === "street" && /\b(preferred location|desired location|job location|campus location|work site|relocat)\b/.test(haystack)) continue;
       if (AGREEMENT_KEYS.has(key) && !isAgreeWidget(el)) continue;

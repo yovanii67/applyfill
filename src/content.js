@@ -1,5 +1,7 @@
 const HOST_ID = "applyfill-host";
 let reviewOpen = false;
+let fabSpot = null;
+let shortcutAt = 0;
 
 function isTop() {
   try {
@@ -42,6 +44,7 @@ function hostEl() {
     host.style.all = "initial";
     host.style.position = "fixed";
     host.style.zIndex = "2147483646";
+    host.style.left = "auto";
     host.style.right = "14px";
     host.style.top = "16px";
     host.style.bottom = "auto";
@@ -49,7 +52,111 @@ function hostEl() {
     document.documentElement.appendChild(host);
     host.attachShadow({ mode: "open" });
   }
+  applyFabPosition(host);
   return host;
+}
+
+function applyFabPosition(host) {
+  const width = 44;
+  const maxLeft = Math.max(8, window.innerWidth - width - 8);
+  const maxTop = Math.max(8, window.innerHeight - width - 8);
+  let left = Number(fabSpot?.left);
+  let top = Number(fabSpot?.top);
+  if (!Number.isFinite(left)) left = maxLeft;
+  if (!Number.isFinite(top)) top = 16;
+  left = Math.min(Math.max(8, left), maxLeft);
+  top = Math.min(Math.max(8, top), maxTop);
+  host.style.left = `${Math.round(left)}px`;
+  host.style.top = `${Math.round(top)}px`;
+  host.style.right = "auto";
+  host.style.bottom = "auto";
+  const shell = host.shadowRoot?.querySelector(".af-shell");
+  shell?.classList.toggle("flip", left < 300);
+}
+
+function robotButton(mood) {
+  const fab = document.createElement("button");
+  fab.className = "af-fab";
+  fab.type = "button";
+  fab.title = "ApplyFill. Drag to move.";
+  fab.innerHTML = faceMarkup(mood);
+  return fab;
+}
+
+function toggleRobotMenu(shell) {
+  const existing = shell.querySelector(".af-menu");
+  if (existing) {
+    existing.remove();
+    return;
+  }
+  const menu = document.createElement("div");
+  menu.className = "af-menu";
+  const fill = document.createElement("button");
+  fill.type = "button";
+  fill.textContent = "Fill this page";
+  fill.addEventListener("click", async (event) => {
+    event.stopPropagation();
+    menu.remove();
+    const next = await fillNow();
+    if (!reviewOpen) {
+      await renderHud(next);
+      flashFields(next.results);
+    }
+  });
+  const sheet = document.createElement("button");
+  sheet.type = "button";
+  sheet.textContent = "Spreadsheet";
+  sheet.addEventListener("click", (event) => {
+    event.stopPropagation();
+    chrome.runtime.sendMessage({ type: "OPEN_TRACKER" });
+  });
+  menu.append(fill, sheet);
+  shell.append(menu);
+}
+
+function bindRobot(fab, shell) {
+  let pointerId = null;
+  let startX = 0;
+  let startY = 0;
+  let originLeft = 0;
+  let originTop = 0;
+  let dragged = false;
+
+  fab.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    const host = hostEl();
+    const rect = host.getBoundingClientRect();
+    pointerId = event.pointerId;
+    startX = event.clientX;
+    startY = event.clientY;
+    originLeft = rect.left;
+    originTop = rect.top;
+    dragged = false;
+    fab.setPointerCapture(pointerId);
+  });
+  fab.addEventListener("pointermove", (event) => {
+    if (pointerId == null || event.pointerId !== pointerId) return;
+    const dx = event.clientX - startX;
+    const dy = event.clientY - startY;
+    if (Math.hypot(dx, dy) > 5) dragged = true;
+    if (!dragged) return;
+    const host = hostEl();
+    const left = Math.min(Math.max(8, originLeft + dx), window.innerWidth - 52);
+    const top = Math.min(Math.max(8, originTop + dy), window.innerHeight - 52);
+    fabSpot = { left, top };
+    applyFabPosition(host);
+  });
+  fab.addEventListener("pointerup", (event) => {
+    if (pointerId == null || event.pointerId !== pointerId) return;
+    pointerId = null;
+    if (dragged) {
+      const rect = hostEl().getBoundingClientRect();
+      fabSpot = { left: rect.left, top: rect.top };
+      chrome.storage.local.set({ fabPosition: fabSpot });
+      return;
+    }
+    toggleRobotMenu(shell);
+  });
 }
 
 async function renderHud(payload) {
@@ -116,11 +223,8 @@ async function renderHud(payload) {
   `;
   shadow.appendChild(wrap);
 
-  wrap.querySelector(".af-fab").addEventListener("click", async () => {
-    const next = await fillNow();
-    await renderHud(next);
-    flashFields(next.results);
-  });
+  bindRobot(wrap.querySelector(".af-fab"), wrap);
+  applyFabPosition(host);
   wrap.querySelector(".af-close").addEventListener("click", (event) => {
     event.stopPropagation();
     wrap.classList.add("is-min");
@@ -231,6 +335,7 @@ function reviewStatus(draft) {
 }
 
 function showScanSaved(body, draft) {
+  reviewOpen = false;
   body.replaceChildren();
   const message = document.createElement("p");
   message.className = "af-empty";
@@ -261,15 +366,7 @@ async function renderScanReview(draft, updating) {
 
   const wrap = document.createElement("div");
   wrap.className = "af-shell is-open";
-  const fab = document.createElement("button");
-  fab.className = "af-fab";
-  fab.type = "button";
-  fab.title = "ApplyFill";
-  fab.innerHTML = faceMarkup("idle");
-  fab.addEventListener("click", () => {
-    wrap.classList.toggle("is-min");
-    if (wrap.classList.contains("is-min")) reviewOpen = false;
-  });
+  const fab = robotButton("idle");
 
   const card = document.createElement("aside");
   card.className = "af-card af-review";
@@ -358,7 +455,9 @@ async function renderScanReview(draft, updating) {
   body.append(hint, form);
   card.append(head, body);
   wrap.append(fab, card);
+  bindRobot(fab, wrap);
   shadow.append(wrap);
+  applyFabPosition(host);
 }
 
 async function dismissReview() {
@@ -381,7 +480,7 @@ async function openScanReview() {
   try {
     const scanned = ApplyFillScan.scanPosting(document, location.href);
     const stored = await chrome.storage.local.get("applications");
-    const existing = ApplyFillApplications.findByUrl(stored.applications, scanned.url);
+    const existing = ApplyFillApplications.findExisting(stored.applications, scanned);
     const draft = ApplyFillApplications.mergeReview(existing, scanned);
     await renderScanReview(draft, Boolean(existing));
     return { ok: true, title: draft.title, company: draft.company };
@@ -419,11 +518,21 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 });
 
 document.addEventListener("keydown", (event) => {
-  if (!isTop()) return;
-  if (!event.altKey || !event.shiftKey || event.ctrlKey || event.metaKey || event.code !== "KeyD") return;
+  if (!event.altKey || !event.shiftKey || event.ctrlKey || event.metaKey) return;
+  if (event.code !== "KeyF" && event.code !== "KeyS") return;
   event.preventDefault();
-  openScanReview();
+  event.stopPropagation();
+  const now = Date.now();
+  if (now - shortcutAt < 500) return;
+  shortcutAt = now;
+  chrome.runtime.sendMessage({ type: event.code === "KeyF" ? "FILL_ACTIVE_TAB" : "SCAN_ACTIVE_TAB" });
 }, true);
+
+chrome.storage.local.get("fabPosition", ({ fabPosition }) => {
+  fabSpot = fabPosition || null;
+  const host = document.getElementById(HOST_ID);
+  if (host) applyFabPosition(host);
+});
 
 if (isTop()) {
   maybeShowFab();

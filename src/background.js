@@ -207,13 +207,22 @@ async function selectRadio(tabId, frameId, marker, points, kind) {
   return { ok: true, via: "mouse" };
 }
 
+const recentAction = new Map();
+
+function runOnce(key, fn) {
+  const now = Date.now();
+  if (now - (recentAction.get(key) || 0) < 600) return Promise.resolve({ ok: true, duplicate: true });
+  recentAction.set(key, now);
+  return fn();
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "FILL_ACTIVE_TAB") {
-    fillActiveTab().then(sendResponse);
+    runOnce("fill", fillActiveTab).then(sendResponse);
     return true;
   }
   if (message.type === "SCAN_ACTIVE_TAB") {
-    scanActiveTab().then(sendResponse);
+    runOnce("scan", scanActiveTab).then(sendResponse);
     return true;
   }
   if (message.type === "OPEN_TRACKER") {
@@ -235,8 +244,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 chrome.commands.onCommand.addListener((command) => {
-  if (command === "fill-page") fillActiveTab();
-  if (command === "scan-posting") scanActiveTab();
+  if (command === "fill-page") runOnce("fill", fillActiveTab);
+  if (command === "save-listing" || command === "scan-posting") runOnce("scan", scanActiveTab);
 });
 
 chrome.runtime.onInstalled.addListener(() => {

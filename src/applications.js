@@ -27,8 +27,13 @@
     try {
       const url = new URL(raw);
       if (url.protocol !== "http:" && url.protocol !== "https:") return "";
+      url.hash = "";
       url.hostname = url.hostname.toLowerCase();
       if (url.pathname !== "/") url.pathname = url.pathname.replace(/\/+$/, "");
+      for (const key of [...url.searchParams.keys()]) {
+        if (/^(utm_|fbclid$|gclid$|mc_|gh_src$|ref$|trk$|source$)/i.test(key)) url.searchParams.delete(key);
+      }
+      url.searchParams.sort();
       return url.href;
     } catch {
       return "";
@@ -65,10 +70,26 @@
     return list.filter((item) => item && typeof item === "object").map((item) => create(item));
   }
 
+  function positionKey(item) {
+    const title = clip(item?.title, 180).toLowerCase();
+    const company = clip(item?.company, 120).toLowerCase();
+    if (!title || !company) return "";
+    return `${title}|${company}`;
+  }
+
   function findByUrl(list, url) {
     const key = canonicalUrl(url);
     if (!key) return null;
     return normalize(list).find((item) => canonicalUrl(item.url) === key) || null;
+  }
+
+  function findExisting(list, partial) {
+    const apps = normalize(list);
+    const byUrl = findByUrl(apps, partial?.url);
+    if (byUrl) return byUrl;
+    const key = positionKey(partial);
+    if (!key) return null;
+    return apps.find((item) => positionKey(item) === key) || null;
   }
 
   function mergeReview(existing, scanned) {
@@ -92,18 +113,23 @@
   function upsert(list, partial) {
     const apps = normalize(list);
     const draft = create(partial);
-    const byId = apps.findIndex((item) => item.id === draft.id);
-    if (byId >= 0) {
-      apps[byId] = create({ ...apps[byId], ...draft, id: apps[byId].id, addedAt: apps[byId].addedAt });
-      return apps;
+    let index = apps.findIndex((item) => item.id && item.id === draft.id);
+    if (index < 0) {
+      const existing = findExisting(apps, draft);
+      if (existing) index = apps.findIndex((item) => item.id === existing.id);
     }
-    const key = canonicalUrl(draft.url);
-    if (key) {
-      const byUrl = apps.findIndex((item) => canonicalUrl(item.url) === key);
-      if (byUrl >= 0) {
-        apps[byUrl] = create({ ...apps[byUrl], ...draft, id: apps[byUrl].id, addedAt: apps[byUrl].addedAt });
-        return apps;
-      }
+    if (index >= 0) {
+      const prior = apps[index];
+      apps[index] = create({
+        ...prior,
+        ...draft,
+        id: prior.id,
+        addedAt: prior.addedAt,
+        date: draft.date || prior.date,
+        notes: partial?.notes != null ? draft.notes : prior.notes,
+        status: draft.status || prior.status,
+      });
+      return apps;
     }
     apps.unshift(draft);
     return apps;
@@ -114,6 +140,8 @@
     create,
     normalize,
     findByUrl,
+    findExisting,
+    positionKey,
     mergeReview,
     upsert,
     canonicalUrl,
