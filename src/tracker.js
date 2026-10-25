@@ -3,6 +3,7 @@ const countEl = document.getElementById("count");
 const toast = document.getElementById("toast");
 const live = document.getElementById("live");
 const addBtn = document.getElementById("add");
+const exportBtn = document.getElementById("exportPdf");
 
 const COLUMN_KEYS = ["position", "company", "location", "date", "posted", "term", "notes", "status", "remove"];
 const DEFAULT_WIDTHS = {
@@ -93,6 +94,17 @@ async function persist() {
   }
 }
 
+function printValue(text) {
+  const span = document.createElement("span");
+  span.className = "print-value";
+  span.textContent = text || "";
+  return span;
+}
+
+function statusLabel(id) {
+  return ApplyFillApplications.STATUSES.find((item) => item.id === id)?.label || id || "";
+}
+
 function textCell(row, key, label, className) {
   const input = document.createElement("input");
   input.className = `cell ${className || ""}`.trim();
@@ -163,7 +175,8 @@ function positionCell(row) {
 
   paint();
   linkRow.append(link, edit);
-  cell.append(title, linkRow, url);
+  const printed = printValue([row.title, row.url].filter(Boolean).join("\n"));
+  cell.append(title, linkRow, url, printed);
   return cell;
 }
 
@@ -192,7 +205,7 @@ function statusCell(row) {
     }
     scheduleSave();
   });
-  td.append(select);
+  td.append(select, printValue(statusLabel(row.status)));
   return td;
 }
 
@@ -224,6 +237,7 @@ function removeCell(row) {
 
 function render() {
   if (countEl) countEl.textContent = String(apps.length);
+  if (exportBtn) exportBtn.disabled = !apps.length;
   rowsEl.replaceChildren();
   if (!apps.length) {
     const tr = document.createElement("tr");
@@ -247,17 +261,17 @@ function render() {
     tr.dataset.id = row.id;
     tr.append(positionCell(row));
     const company = document.createElement("td");
-    company.append(textCell(row, "company", "Company"));
+    company.append(textCell(row, "company", "Company"), printValue(row.company));
     const location = document.createElement("td");
-    location.append(textCell(row, "location", "Location"));
+    location.append(textCell(row, "location", "Location"), printValue(row.location));
     const date = document.createElement("td");
-    date.append(textCell(row, "date", "Date", "date"));
+    date.append(textCell(row, "date", "Date", "date"), printValue(row.date));
     const posted = document.createElement("td");
-    posted.append(textCell(row, "posted", "Posted date", "date"));
+    posted.append(textCell(row, "posted", "Posted date", "date"), printValue(row.posted));
     const term = document.createElement("td");
-    term.append(textCell(row, "term", "Term"));
+    term.append(textCell(row, "term", "Term"), printValue(row.term));
     const notes = document.createElement("td");
-    notes.append(textCell(row, "notes", "Notes", "notes"));
+    notes.append(textCell(row, "notes", "Notes", "notes"), printValue(row.notes));
     tr.append(company, location, date, posted, term, notes, statusCell(row), removeCell(row));
     rowsEl.append(tr);
   }
@@ -285,6 +299,7 @@ async function load() {
     tr.append(td);
     rowsEl.append(tr);
     if (addBtn) addBtn.disabled = true;
+    if (exportBtn) exportBtn.disabled = true;
     return;
   }
   const stored = await chrome.storage.local.get(["applications", "columnWidths"]);
@@ -302,5 +317,24 @@ async function load() {
   });
 }
 
+function downloadPdf() {
+  if (!apps.length) {
+    flashSaved("Nothing to export.");
+    return;
+  }
+  const previous = document.title;
+  const day = new Date().toISOString().slice(0, 10);
+  document.title = `ApplyFill-tracker-${day}`;
+  document.body.classList.add("is-printing");
+  const done = () => {
+    document.title = previous;
+    document.body.classList.remove("is-printing");
+    window.removeEventListener("afterprint", done);
+  };
+  window.addEventListener("afterprint", done);
+  window.print();
+}
+
 addBtn?.addEventListener("click", addRow);
+exportBtn?.addEventListener("click", downloadPdf);
 load();

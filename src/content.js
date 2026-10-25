@@ -1,7 +1,11 @@
 const HOST_ID = "applyfill-host";
+const FAB_SIZE = 44;
+const FAB_MARGIN = 8;
+const DRAG_THRESHOLD = 5;
 let reviewOpen = false;
 let fabSpot = null;
 let shortcutAt = 0;
+let resizeBound = false;
 
 function isTop() {
   try {
@@ -44,6 +48,9 @@ function hostEl() {
     host.style.all = "initial";
     host.style.position = "fixed";
     host.style.zIndex = "2147483646";
+    host.style.width = `${FAB_SIZE}px`;
+    host.style.height = `${FAB_SIZE}px`;
+    host.style.overflow = "visible";
     host.style.left = "auto";
     host.style.right = "14px";
     host.style.top = "16px";
@@ -52,33 +59,51 @@ function hostEl() {
     document.documentElement.appendChild(host);
     host.attachShadow({ mode: "open" });
   }
+  host.style.width = `${FAB_SIZE}px`;
+  host.style.height = `${FAB_SIZE}px`;
   applyFabPosition(host);
+  bindResize();
   return host;
 }
 
+function clampFabPos(left, top) {
+  const maxLeft = Math.max(FAB_MARGIN, window.innerWidth - FAB_SIZE - FAB_MARGIN);
+  const maxTop = Math.max(FAB_MARGIN, window.innerHeight - FAB_SIZE - FAB_MARGIN);
+  return {
+    left: Math.min(Math.max(FAB_MARGIN, left), maxLeft),
+    top: Math.min(Math.max(FAB_MARGIN, top), maxTop),
+  };
+}
+
+function bindResize() {
+  if (resizeBound) return;
+  resizeBound = true;
+  window.addEventListener("resize", () => {
+    const host = document.getElementById(HOST_ID);
+    if (host) applyFabPosition(host);
+  });
+}
+
 function applyFabPosition(host) {
-  const width = 44;
-  const maxLeft = Math.max(8, window.innerWidth - width - 8);
-  const maxTop = Math.max(8, window.innerHeight - width - 8);
+  const maxLeft = Math.max(FAB_MARGIN, window.innerWidth - FAB_SIZE - FAB_MARGIN);
   let left = Number(fabSpot?.left);
   let top = Number(fabSpot?.top);
   if (!Number.isFinite(left)) left = maxLeft;
   if (!Number.isFinite(top)) top = 16;
-  left = Math.min(Math.max(8, left), maxLeft);
-  top = Math.min(Math.max(8, top), maxTop);
-  host.style.left = `${Math.round(left)}px`;
-  host.style.top = `${Math.round(top)}px`;
+  const next = clampFabPos(left, top);
+  host.style.left = `${Math.round(next.left)}px`;
+  host.style.top = `${Math.round(next.top)}px`;
   host.style.right = "auto";
   host.style.bottom = "auto";
   const shell = host.shadowRoot?.querySelector(".af-shell");
-  shell?.classList.toggle("flip", left < 300);
+  shell?.classList.toggle("flip", next.left < 300);
 }
 
 function robotButton(mood) {
   const fab = document.createElement("button");
   fab.className = "af-fab";
   fab.type = "button";
-  fab.title = "ApplyFill. Drag to move.";
+  fab.title = "Drag to move · Click for menu";
   fab.innerHTML = faceMarkup(mood);
   return fab;
 }
@@ -122,6 +147,39 @@ function bindRobot(fab, shell) {
   let originTop = 0;
   let dragged = false;
 
+  function onMove(event) {
+    if (pointerId == null || event.pointerId !== pointerId) return;
+    const dx = event.clientX - startX;
+    const dy = event.clientY - startY;
+    if (!dragged && Math.hypot(dx, dy) <= DRAG_THRESHOLD) return;
+    if (!dragged) {
+      dragged = true;
+      shell.classList.add("is-dragging");
+      shell.querySelector(".af-menu")?.remove();
+    }
+    event.preventDefault();
+    fabSpot = clampFabPos(originLeft + dx, originTop + dy);
+    applyFabPosition(hostEl());
+  }
+
+  function onUp(event) {
+    if (pointerId == null || event.pointerId !== pointerId) return;
+    pointerId = null;
+    window.removeEventListener("pointermove", onMove, true);
+    window.removeEventListener("pointerup", onUp, true);
+    window.removeEventListener("pointercancel", onUp, true);
+    document.documentElement.style.userSelect = "";
+    shell.classList.remove("is-dragging");
+    if (dragged) {
+      const rect = hostEl().getBoundingClientRect();
+      fabSpot = clampFabPos(rect.left, rect.top);
+      chrome.storage.local.set({ fabPosition: fabSpot });
+      applyFabPosition(hostEl());
+      return;
+    }
+    toggleRobotMenu(shell);
+  }
+
   fab.addEventListener("pointerdown", (event) => {
     if (event.button !== 0) return;
     const host = hostEl();
@@ -132,30 +190,15 @@ function bindRobot(fab, shell) {
     originLeft = rect.left;
     originTop = rect.top;
     dragged = false;
-    fab.setPointerCapture(pointerId);
+    document.documentElement.style.userSelect = "none";
+    window.addEventListener("pointermove", onMove, true);
+    window.addEventListener("pointerup", onUp, true);
+    window.addEventListener("pointercancel", onUp, true);
   });
-  fab.addEventListener("pointermove", (event) => {
-    if (pointerId == null || event.pointerId !== pointerId) return;
-    const dx = event.clientX - startX;
-    const dy = event.clientY - startY;
-    if (Math.hypot(dx, dy) > 5) dragged = true;
+  fab.addEventListener("click", (event) => {
     if (!dragged) return;
-    const host = hostEl();
-    const left = Math.min(Math.max(8, originLeft + dx), window.innerWidth - 52);
-    const top = Math.min(Math.max(8, originTop + dy), window.innerHeight - 52);
-    fabSpot = { left, top };
-    applyFabPosition(host);
-  });
-  fab.addEventListener("pointerup", (event) => {
-    if (pointerId == null || event.pointerId !== pointerId) return;
-    pointerId = null;
-    if (dragged) {
-      const rect = hostEl().getBoundingClientRect();
-      fabSpot = { left: rect.left, top: rect.top };
-      chrome.storage.local.set({ fabPosition: fabSpot });
-      return;
-    }
-    toggleRobotMenu(shell);
+    event.preventDefault();
+    event.stopImmediatePropagation();
   });
 }
 
@@ -190,7 +233,7 @@ async function renderHud(payload) {
   const wrap = document.createElement("div");
   wrap.className = `af-shell ${unique.length ? "is-open" : "is-empty"}`;
   wrap.innerHTML = `
-    <button class="af-fab" type="button" title="ApplyFill">
+    <button class="af-fab" type="button" title="Drag to move · Click for menu">
       <span class="af-face ${mood}" aria-hidden="true">
         <span class="af-antenna"></span>
         <span class="af-eye left"></span>

@@ -26,9 +26,17 @@
   display: grid;
   place-items: center;
   touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-.af-fab:active { cursor: grabbing; }
+.af-fab:active,
+.af-shell.is-dragging .af-fab { cursor: grabbing; }
+
+.af-shell.is-dragging .af-card,
+.af-shell.is-dragging .af-menu {
+  display: none;
+}
 
 .af-menu {
   position: absolute;

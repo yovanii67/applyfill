@@ -91,7 +91,7 @@ h1 {
 
 .progress-meta strong { color: var(--ink); font-size: 28px; font-weight: 650; }
 
-#add, .linkish {
+#add, #exportPdf, .linkish {
   border: 0;
   background: var(--charcoal);
   color: #fffdf9;
@@ -103,6 +103,19 @@ h1 {
 }
 
 #add:hover { background: #1f1b17; }
+
+#exportPdf {
+  background: #fffdf9;
+  color: var(--charcoal);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+#exportPdf:hover { background: #fff; }
+
+#exportPdf:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
 
 .toast { margin: 0; color: var(--accent-deep); font-size: 13px; }
 
@@ -336,8 +349,79 @@ h1 {
   border: 0;
 }
 
+.print-value,
+.print-title { display: none; }
+
 @media (max-width: 800px) {
   .hero-card { flex-direction: column; }
   .hero-side { justify-items: start; }
   h1 { font-size: 28px; }
+}
+
+@media print {
+  html, body {
+    background: #fff;
+    color: #111;
+  }
+
+  main {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .hero-card,
+  .legend,
+  #add,
+  #exportPdf,
+  .toast,
+  .col-resize,
+  .edit-link,
+  .remove,
+  .row-action,
+  .cell,
+  .status,
+  .pos-links {
+    display: none !important;
+  }
+
+  .sheet-wrap {
+    overflow: visible;
+    background: #fff;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .sheet {
+    width: 100% !important;
+    table-layout: auto;
+  }
+
+  .sheet th,
+  .sheet td,
+  .position {
+    position: static;
+    width: auto !important;
+    background: #fff;
+    box-shadow: none;
+    color: #111;
+    border-bottom: 1px solid #ccc;
+  }
+
+  .print-title {
+    display: block;
+    margin: 0 0 12px;
+    font-size: 18px;
+  }
+
+  .print-value {
+    display: block;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  .empty { display: none; }
 }
