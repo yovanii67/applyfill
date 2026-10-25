@@ -634,9 +634,25 @@
       fire(el);
       return true;
     }
-    nativeSet(el, value);
+    nativeSet(el, graduationControlValue(el, match, value));
     fire(el);
     return true;
+  }
+
+  function graduationControlValue(el, match, value) {
+    const type = (el.type || "").toLowerCase();
+    if (match.key !== "graduationDate" || (type !== "date" && type !== "datetime-local")) return value;
+    const text = String(value || "");
+    const year = (text.match(/\b(20\d{2})\b/) || [])[1];
+    if (!year) return value;
+    const months = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+    const lower = text.toLowerCase();
+    let month = "01";
+    months.forEach((name, index) => {
+      if (new RegExp(`\\b${name.slice(0, 3)}`).test(lower)) month = String(index + 1).padStart(2, "0");
+    });
+    const iso = `${year}-${month}-01`;
+    return type === "datetime-local" ? `${iso}T00:00` : iso;
   }
 
   function displaySection(pageSection, fieldMeta) {

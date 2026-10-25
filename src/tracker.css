@@ -185,10 +185,10 @@ h1 {
 .sheet-wrap { overflow: auto; }
 
 .sheet {
-  width: 100%;
+  width: max-content;
   border-collapse: separate;
   border-spacing: 0;
-  min-width: 980px;
+  table-layout: fixed;
 }
 
 .sheet th {
@@ -218,10 +218,21 @@ h1 {
   position: sticky;
   left: 0;
   z-index: 1;
-  min-width: 240px;
   background: #fffdf9;
   box-shadow: 8px 0 12px rgba(70, 50, 30, 0.03);
 }
+
+.col-resize {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.col-resize:hover { background: rgba(232, 160, 84, 0.35); }
 
 .sheet th.position { z-index: 3; }
 
@@ -261,7 +272,7 @@ h1 {
   color: var(--accent-deep);
   font-size: 12px;
   line-height: 1.35;
-  max-width: 230px;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

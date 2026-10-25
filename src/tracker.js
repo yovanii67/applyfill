@@ -4,10 +4,71 @@ const toast = document.getElementById("toast");
 const live = document.getElementById("live");
 const addBtn = document.getElementById("add");
 
+const COLUMN_KEYS = ["position", "company", "location", "date", "posted", "term", "notes", "status", "remove"];
+const DEFAULT_WIDTHS = {
+  position: 260,
+  company: 150,
+  location: 150,
+  date: 150,
+  posted: 150,
+  term: 130,
+  notes: 210,
+  status: 150,
+  remove: 96,
+};
+
 let apps = [];
+let widths = { ...DEFAULT_WIDTHS };
 let saveTimer = 0;
 let suppress = false;
 let toastTimer = 0;
+
+function applyWidths() {
+  const table = document.querySelector(".sheet");
+  if (!table) return;
+  const heads = [...table.querySelectorAll("thead th")];
+  let total = 0;
+  heads.forEach((th, index) => {
+    const key = COLUMN_KEYS[index];
+    const min = key === "status" ? 124 : 80;
+    const width = Math.max(min, Number(widths[key]) || DEFAULT_WIDTHS[key]);
+    widths[key] = width;
+    th.style.width = `${width}px`;
+    total += width;
+  });
+  table.style.width = `${total}px`;
+}
+
+function installResizeHandles() {
+  const heads = [...document.querySelectorAll(".sheet thead th")];
+  heads.forEach((th, index) => {
+    const key = COLUMN_KEYS[index];
+    if (!key || th.querySelector(".col-resize")) return;
+    const handle = document.createElement("span");
+    handle.className = "col-resize";
+    handle.title = "Drag to resize this column";
+    handle.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const startX = event.clientX;
+      const start = widths[key];
+      const min = key === "status" ? 124 : 80;
+      function move(ev) {
+        widths[key] = Math.max(min, Math.round(start + ev.clientX - startX));
+        applyWidths();
+      }
+      function up() {
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", up);
+        if (globalThis.chrome?.storage?.local) chrome.storage.local.set({ columnWidths: widths });
+      }
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", up);
+    });
+    th.append(handle);
+  });
+  applyWidths();
+}
 
 function flashSaved(text) {
   if (!toast) return;
@@ -169,7 +230,7 @@ function render() {
     const td = document.createElement("td");
     td.colSpan = 9;
     td.className = "empty";
-    td.append("No internships yet. Open a posting and press Alt + Shift + D, or ");
+    td.append("No internships yet. Open a posting and press Alt + Shift + S, or ");
     const sample = document.createElement("a");
     sample.href = "../demo/posting.html";
     sample.target = "_blank";
@@ -226,8 +287,12 @@ async function load() {
     if (addBtn) addBtn.disabled = true;
     return;
   }
-  const stored = await chrome.storage.local.get("applications");
+  const stored = await chrome.storage.local.get(["applications", "columnWidths"]);
   apps = ApplyFillApplications.normalize(stored.applications);
+  if (stored.columnWidths && typeof stored.columnWidths === "object") {
+    widths = { ...DEFAULT_WIDTHS, ...stored.columnWidths };
+  }
+  installResizeHandles();
   render();
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== "local" || !changes.applications || suppress) return;
